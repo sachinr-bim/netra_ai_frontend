@@ -1,0 +1,11 @@
+@import "tailwindcss";
+
+:root {
+    --theme-color: #117686; /* default color */
+  }  
+
+/* Custom shadow class */
+.shadow-theme {
+  box-shadow: 0 25px 50px -30px var(--theme-color);
+}  
+  
