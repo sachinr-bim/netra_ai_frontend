@@ -3,7 +3,7 @@ import React from "react";
 // Icons
 import EditIcon from "../../../../assets/icons/EditIcon";
 
-export default function DeleteShop() {
+export default function DeleteShop({selectedShop}) {
   return (
     <div className="md:w-3/4 p-8">
       {/* Delete Shop Section */}
@@ -12,13 +12,13 @@ export default function DeleteShop() {
         <div className="bg-white shadow-lg rounded-lg p-5 flex items-center justify-between">
           <div className="flex items-center space-x-4">
             <img
-              src="https://i.redd.it/the-newly-renovated-sailor-moon-store-in-tokyo-v0-64ti7re36mjd1.jpg?width=4032&format=pjpg&auto=webp&s=bb96249bd51937f15589fbe4e05c43c0e985b0bc" 
+              src={selectedShop.image ? selectedShop.image : "https://cdn-icons-png.freepik.com/256/869/869636.png?semt=ais_hybrid"} 
               alt="Shop Thumbnail"
               className="w-12 h-12 rounded-lg object-cover"
             />
             <div>
-              <h3 className="text-lg font-medium text-gray-800">Sailor Shop</h3>
-              <p className="text-gray-500 text-sm">Newyork Street, America</p>
+              <h3 className="text-lg font-medium text-gray-800">{selectedShop.name}</h3>
+              <p className="text-gray-500 text-sm">{selectedShop.location}</p>
             </div>
           </div>
           <button className="bg-[var(--theme-color)] text-white hover:bg-white border border-[var(--theme-color)] hover:text-[var(--theme-color)] px-5 py-1 rounded-lg flex items-center gap-4 transition-colors">

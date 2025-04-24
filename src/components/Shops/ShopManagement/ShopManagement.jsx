@@ -2,7 +2,8 @@
 import { useState } from "react";
 
 // Redux
-import { useSelector } from "react-redux";
+import { useSelector,useDispatch } from "react-redux";
+import { selectShop } from "../../../reduxToolkit/slices/shopSlice";
 
 // Packages and Libraries
 import { useNavigate } from "react-router-dom";
@@ -15,6 +16,7 @@ import { LocationIcon } from "../../../assets/icons/LocationIcon";
 
 export default function ShopManagement() {
 
+  const dispatch = useDispatch()
   const shops = useSelector((state) => state.shops.shops);
   
   const navigate = useNavigate()
@@ -26,7 +28,11 @@ export default function ShopManagement() {
   };
 
   const showShopDetails = (id) => {
-    navigate(`/shopDetails/${id}`)
+    const shop = shops.find(shop => shop.id === id);
+    if (shop) {
+      dispatch(selectShop(shop));
+    }
+    navigate(`/shopDetails/${id}`);
   }
 
   return (
@@ -84,7 +90,7 @@ export default function ShopManagement() {
                 <span className="line-clamp-1">{shop.location}</span>
               </p>
               <p className="text-gray-600 text-sm md:text-base">Shop Admin: {shop.adminCount}</p>
-              <p className="text-gray-600 text-sm md:text-base">Total Camera: {shop.cameras} cameras</p>
+              <p className="text-gray-600 text-sm md:text-base">Total Camera: {shop.cameras.length} cameras</p>
             </div>
           </div>
         ))}

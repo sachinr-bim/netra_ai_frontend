@@ -1,13 +1,17 @@
 // React
-import React, { useState } from "react";
+import React, { useState,useEffect } from "react";
 
 // Redux
-import { useSelector } from "react-redux";
+import { useSelector,useDispatch } from "react-redux";
+import { selectShop } from "../../../reduxToolkit/slices/shopSlice";
+
+// Packages and Libraries
+import { useParams } from "react-router-dom";
 
 // Components
 import ShopDetailsMenu from "./ShopDetailsMenu/ShopDetailsMenu";
 import Overview from "./ShopDetailsMenu/Overview";
-import EdgeDevice from "./ShopDetailsMenu/EdgeDevice";
+import EdgeDevice from "../ShopDetails/ShopDetailsMenu/EdgeDevice/EdgeDevice";
 import AddCamera from "./ShopDetailsMenu/AddCamera";
 import ShopCurrentPlan from "./ShopDetailsMenu/ShopCurrentPlan";
 import DeleteShop from "./ShopDetailsMenu/DeleteShop";
@@ -18,10 +22,23 @@ import MapPreview from '../../../assets/images/map.png'
 
 const ShopDetails = () => {
 
+  const { id } = useParams();
+  const dispatch = useDispatch();
+  const selectedShop = useSelector((state) => state.shops.selectedShop);
   const shops = useSelector((state) => state.shops.shops)
 
   const [activeTab,setActiveTab] = useState('overview')
   const [isMapOpen, setIsMapOpen] = useState(false)
+
+  // If the selectedShop isn't set or doesn't match the URL, find it
+  useEffect(() => {
+    if (!selectedShop || selectedShop.id !== parseInt(id)) {
+      const shop = shops.find(shop => shop.id === parseInt(id));
+      if (shop) {
+        dispatch(selectShop(shop));
+      }
+    }
+  }, [id, shops, selectedShop, dispatch]);
 
   const handleMapOpen = () => {
     setIsMapOpen(true)
@@ -30,17 +47,17 @@ const ShopDetails = () => {
   const renderMenuContent = () => {
     switch(activeTab) {
       case 'overview':
-        return <Overview />;
+        return <Overview selectedShop={selectedShop} />;
       case 'edgeDevice':
-        return <EdgeDevice />  
+        return <EdgeDevice selectedShop={selectedShop} />  
       case 'addCameraDetails':
         return <AddCamera />;
       case 'subscription':
         return <ShopCurrentPlan />;
       case 'deleteShop':
-        return <DeleteShop />    
+        return <DeleteShop selectedShop={selectedShop} />    
       default:
-        return <Overview />;
+        return <Overview selectedShop={selectedShop} />;
     }
   };
   
@@ -54,7 +71,7 @@ const ShopDetails = () => {
         <div className="relative rounded-lg overflow-hidden flex-4 min-h-80">
           {/* Shop Background Image */}
           <img
-            src="https://i.redd.it/the-newly-renovated-sailor-moon-store-in-tokyo-v0-64ti7re36mjd1.jpg?width=4032&format=pjpg&auto=webp&s=bb96249bd51937f15589fbe4e05c43c0e985b0bc"
+            src={selectedShop.image ? selectedShop.image : "https://cdn-icons-png.freepik.com/256/869/869636.png?semt=ais_hybrid"}
             alt="Shop"
             className="w-full h-60 object-cover"
           />
@@ -63,13 +80,13 @@ const ShopDetails = () => {
           <div className="absolute bottom-0 left-0 right-0 bg-white bg-opacity-90 backdrop-blur-sm p-4 md:p-6 rounded-t-lg">
             <div className="flex flex-col md:flex-row justify-between">
               <div>
-                <h2 className="text-xl md:text-2xl font-bold">Sailor Shop</h2>
+                <h2 className="text-xl md:text-2xl font-bold">{selectedShop.name}</h2>
                 <p className="text-gray-600">Modern & stylish clothes for you</p>
               </div>
               <div className="flex flex-wrap gap-2 md:gap-4 text-sm md:text-base text-[var(--theme-color)] mt-2 md:mt-0">
-                <p>Location: New York Street, America</p>
-                <p>Shop Admin: 10 members</p>
-                <p>Total Cameras: 4</p>
+                <p>Location: {selectedShop.location}</p>
+                <p>Shop Admin: {selectedShop.adminCount} members</p>
+                <p>Total Cameras: {selectedShop.cameras.length}</p>
               </div>
             </div>
           </div>
@@ -77,7 +94,7 @@ const ShopDetails = () => {
 
         {/* Map Section (now right side) */}
         <div className="bg-white rounded-lg p-4 flex-1">
-          <h2 className="text-4xl font-bold mb-2 ">Sailor Shop Map</h2>
+          <h2 className="text-4xl font-bold mb-2 ">{selectedShop.name} Map</h2>
           <div className="flex flex-col h-60">
             <img
               src={MapPreview}

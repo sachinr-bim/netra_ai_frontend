@@ -3,7 +3,7 @@ import React,{useState} from 'react'
 // Icons
 import EditIcon from '../../../../assets/icons/EditIcon'
 
-export default function Overview() {
+export default function Overview({selectedShop}) {
 
   const [editInfo,setEditInfo] = useState(false)
 
@@ -23,7 +23,7 @@ export default function Overview() {
             <label className="block font-semibold">Shop Name</label>
             <input
               type="text"
-              value="Sailor Shop"
+              value={selectedShop.name}
               className="w-full border border-gray-300 p-2 rounded-md mt-1 bg-white"
               readOnly = {!editInfo}
             />
@@ -43,7 +43,7 @@ export default function Overview() {
             <label className="block font-semibold">Location</label>
             <input
               type="text"
-              value="Sailor Shop"
+              value={selectedShop.location}
               className="w-full border border-gray-300 p-2 rounded-md mt-1 bg-white"
               readOnly = {!editInfo}
             />
@@ -56,7 +56,7 @@ export default function Overview() {
 
           <div className="mt-4">
             <label className="block font-semibold">Total Camera</label>
-            <input type="text" value="4" className="w-full border border-gray-300 p-2 rounded-md mt-1 bg-white" readOnly = {!editInfo} />
+            <input type="text" value={selectedShop.cameras.length} className="w-full border border-gray-300 p-2 rounded-md mt-1 bg-white" readOnly = {!editInfo} />
           </div>
         </div>
     </>

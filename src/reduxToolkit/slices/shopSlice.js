@@ -1,5 +1,4 @@
 import { createSlice } from "@reduxjs/toolkit";
-import AddAdmin from "../../components/Shops/ShopAdmin/AddAdmin";
 
 const initialState = {
   shops: [
@@ -10,7 +9,10 @@ const initialState = {
       location: "New York, USA",
       coordinates: { lat: 35.6895, lng: 139.6917 },
       adminCount: 10,
-      cameras: 4,
+      cameras: [
+        {id: 1, deviceModel: 'NVIDIA Jetson AGX Orin', RAM: '2 GB', CPU: '4 Core', SSD: '128 GB', configuration: 'NVIDIA Jetson with 256 CUDA Cores or Equivalent'},
+        {id: 2, deviceModel: 'Sony Camera AGX Orin', RAM: '2 GB', CPU: '4 Core', SSD: '128 GB', configuration: 'Sony Camera with 125 CUDA Cores or Equivalent'}
+    ],
     },
     {
       id: 2,
@@ -19,7 +21,10 @@ const initialState = {
       location: "Los Angeles, USA",
       coordinates: { lat: 34.0522, lng: -118.2437 },
       adminCount: 10,
-      cameras: 4,
+      cameras: [
+        {id: 1, deviceModel: 'NVIDIA Jetson AGX Orin', RAM: '2 GB', CPU: '4 Core', SSD: '128 GB', configuration: 'NVIDIA Jetson with 256 CUDA Cores or Equivalent'},
+        {id: 2, deviceModel: 'Sony Camera AGX Orin', RAM: '2 GB', CPU: '4 Core', SSD: '128 GB', configuration: 'Sony Camera with 125 CUDA Cores or Equivalent'}
+    ],
     },
     {
       id: 3,
@@ -28,7 +33,10 @@ const initialState = {
       location: "Chicago, USA",
       coordinates: { lat: 41.8781, lng: -87.6298 },
       adminCount: 10,
-      cameras: 4,
+      cameras: [
+        {id: 1, deviceModel: 'NVIDIA Jetson AGX Orin', RAM: '2 GB', CPU: '4 Core', SSD: '128 GB', configuration: 'NVIDIA Jetson with 256 CUDA Cores or Equivalent'},
+        {id: 2, deviceModel: 'Sony Camera AGX Orin', RAM: '2 GB', CPU: '4 Core', SSD: '128 GB', configuration: 'Sony Camera with 125 CUDA Cores or Equivalent'}
+    ],
     },
     {
       id: 4,
@@ -37,7 +45,10 @@ const initialState = {
       location: "San Francisco, USA",
       coordinates: { lat: 37.7749, lng: -122.4194 },
       adminCount: 10,
-      cameras: 4,
+      cameras: [
+        {id: 1, deviceModel: 'NVIDIA Jetson AGX Orin', RAM: '2 GB', CPU: '4 Core', SSD: '128 GB', configuration: 'NVIDIA Jetson with 256 CUDA Cores or Equivalent'},
+        {id: 2, deviceModel: 'Sony Camera AGX Orin', RAM: '2 GB', CPU: '4 Core', SSD: '128 GB', configuration: 'Sony Camera with 125 CUDA Cores or Equivalent'}
+    ],
     },
     {
       id: 5,
@@ -46,7 +57,10 @@ const initialState = {
       location: "New York, USA",
       coordinates: { lat: 35.6895, lng: 139.6917 },
       adminCount: 10,
-      cameras: 4,
+      cameras: [
+        {id: 1, deviceModel: 'NVIDIA Jetson AGX Orin', RAM: '2 GB', CPU: '4 Core', SSD: '128 GB', configuration: 'NVIDIA Jetson with 256 CUDA Cores or Equivalent'},
+        {id: 2, deviceModel: 'Sony Camera AGX Orin', RAM: '2 GB', CPU: '4 Core', SSD: '128 GB', configuration: 'Sony Camera with 125 CUDA Cores or Equivalent'}
+    ],
     },
     {
       id: 6,
@@ -55,7 +69,10 @@ const initialState = {
       location: "Los Angeles, USA",
       coordinates: { lat: 34.0522, lng: -118.2437 },
       adminCount: 10,
-      cameras: 4,
+      cameras: [
+        {id: 1, deviceModel: 'NVIDIA Jetson AGX Orin', RAM: '2 GB', CPU: '4 Core', SSD: '128 GB', configuration: 'NVIDIA Jetson with 256 CUDA Cores or Equivalent'},
+        {id: 2, deviceModel: 'Sony Camera AGX Orin', RAM: '2 GB', CPU: '4 Core', SSD: '128 GB', configuration: 'Sony Camera with 125 CUDA Cores or Equivalent'}
+    ],
     },
     {
       id: 7,
@@ -64,7 +81,10 @@ const initialState = {
       location: "Chicago, USA",
       coordinates: { lat: 41.8781, lng: -87.6298 },
       adminCount: 10,
-      cameras: 4,
+      cameras: [
+        {id: 1, deviceModel: 'NVIDIA Jetson AGX Orin', RAM: '2 GB', CPU: '4 Core', SSD: '128 GB', configuration: 'NVIDIA Jetson with 256 CUDA Cores or Equivalent'},
+        {id: 2, deviceModel: 'Sony Camera AGX Orin', RAM: '2 GB', CPU: '4 Core', SSD: '128 GB', configuration: 'Sony Camera with 125 CUDA Cores or Equivalent'}
+    ],
     },
     {
       id: 8,
@@ -73,7 +93,11 @@ const initialState = {
       location: "San Francisco, USA",
       coordinates: { lat: 37.7749, lng: -122.4194 },
       adminCount: 10,
-      cameras: 4,
+      cameras: [
+        {id: 1, deviceModel: 'NVIDIA Jetson AGX Orin', RAM: '2 GB', CPU: '4 Core', SSD: '128 GB', configuration: 'NVIDIA Jetson with 256 CUDA Cores or Equivalent'},
+        {id: 2, deviceModel: 'Sony Camera AGX Orin', RAM: '2 GB', CPU: '4 Core', SSD: '128 GB', configuration: 'Sony Camera with 125 CUDA Cores or Equivalent'}
+    ],
+    selectedShop: null
     },
   ],
   
@@ -160,6 +184,12 @@ const shopsSlice = createSlice({
                 state.shops[index] = updatedShop;
             }
         },
+        selectShop: (state, action) => {
+          state.selectedShop = action.payload;
+        },
+        clearSelectedShop: (state) => {
+            state.selectedShop = null;
+        },
         deleteShop: (state, action) => {
             state.shops = state.shops.filter((shop) => shop.id !== action.payload);
         },
@@ -172,6 +202,6 @@ const shopsSlice = createSlice({
     }
 });
 
-export const { addShop, updateShop, deleteShop, addAdmin, editAdmin } = shopsSlice.actions;
+export const { addShop, updateShop, deleteShop, addAdmin, editAdmin, selectShop, clearSelectedShop } = shopsSlice.actions;
 
 export default shopsSlice.reducer;

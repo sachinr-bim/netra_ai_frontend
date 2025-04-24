@@ -5,6 +5,7 @@ import anomalyReducer from './slices/anomalySlice'
 import subscriptionReducer from './slices/subscriptionSlice'
 import visitorReducer from './slices/visitorsSlice'
 import ticketsReducer from './slices/ticketSlice'
+import userReducer from './slices/userSlice'
 
 const store = configureStore({
     reducer: {
@@ -13,7 +14,8 @@ const store = configureStore({
         anomaly: anomalyReducer,
         subscription: subscriptionReducer,
         visitor: visitorReducer,
-        tickets: ticketsReducer
+        tickets: ticketsReducer,
+        user: userReducer,
     }
 });
 
