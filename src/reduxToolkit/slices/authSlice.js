@@ -1,0 +1,233 @@
+// userSlice.js
+import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
+import axios from 'axios';
+
+// API endpoint
+const LOGIN_API = 'http://52.90.112.216/api/user/login';
+
+export const signupUser = createAsyncThunk(
+  'auth/signup',
+  async (userData, { rejectWithValue }) => {
+    try {
+      const response = await axios.post('http://52.90.112.216/api/user/createTenant', userData);
+      
+      // Optional: Auto-login after signup if your API returns token
+      if (response.data.token) {
+        localStorage.setItem('userToken', response.data.token);
+      }
+      
+      return response.data;
+    } catch (error) {
+      if (error.response && error.response.data.message) {
+        return rejectWithValue(error.response.data.message);
+      } else {
+        return rejectWithValue(error.message);
+      }
+    }
+  }
+);
+
+// Async thunk for login
+export const loginUser = createAsyncThunk(
+  'user/login',
+  async (credentials, { rejectWithValue }) => {
+    try {
+      const response = await axios.post(LOGIN_API, credentials);
+      
+      // Store token in localStorage
+      if (response.data.token) {
+        localStorage.setItem('userToken', response.data.token);
+      }
+
+      console.log('Login API data:', response.data)
+      return response.data;
+    } catch (error) {
+      // Return custom error message from API if any
+      if (error.response && error.response.data.message) {
+        return rejectWithValue(error.response.data.message);
+      } else {
+        return rejectWithValue(error.message);
+      }
+    }
+  }
+);
+
+export const forgotPassword = createAsyncThunk(
+  'auth/forgotPassword',
+  async (email, { rejectWithValue }) => {
+    try {
+      const response = await axios.post('http://52.90.112.216/api/user/forgot-password', { email });
+      console.log('Forgot Password:',response.data)
+      return response.data;
+    } catch (error) {
+      if (error.response && error.response.data.message) {
+        return rejectWithValue(error.response.data.message);
+      } else {
+        return rejectWithValue(error.message);
+      }
+    }
+  }
+);
+
+export const verifyPasswordToken = createAsyncThunk(
+  'auth/verifyPasswordToken',
+  async ({ email, token }, { rejectWithValue }) => {
+    try {
+      const response = await axios.post('http://52.90.112.216/api/user/verify-Password-Token', { email, token });
+      console.log('Verify Code:',response.data)
+      return response.data;
+    } catch (error) {
+      if (error.response && error.response.data.message) {
+        return rejectWithValue(error.response.data.message);
+      } else {
+        return rejectWithValue(error.message);
+      }
+    }
+  }
+);
+
+export const resetPassword = createAsyncThunk(
+  'auth/resetPassword',
+  async ({ email, token, password }, { rejectWithValue }) => {
+    try {
+      // Add debug logging
+      console.log("Sending reset request with:", { 
+        email, 
+        token: parseInt(token), 
+        password 
+      });
+      
+      const response = await axios.post('http://52.90.112.216/api/user/new-password', {
+        email,
+        token: parseInt(token), // Ensure token is number
+        password
+      });
+      
+      console.log("Reset password response:", response.data);
+      return response.data;
+    } catch (error) {
+      // Enhanced error handling
+      console.error("Reset password error:", error.response?.data || error.message);
+      
+      let errorMessage = "Password reset failed";
+      if (error.response) {
+        if (error.response.data.message.includes("token")) {
+          errorMessage = "Something went wrong while resetting password. Please try again later.";
+        } else if (error.response.status === 400) {
+          errorMessage = "Invalid request. Please check your inputs.";
+        }
+      }
+      
+      return rejectWithValue(errorMessage);
+    }
+  }
+);
+
+// Check localStorage for existing token
+const userToken = localStorage.getItem('userToken') 
+  ? localStorage.getItem('userToken') 
+  : null;
+
+const initialState = {
+  loading: false,
+  userInfo: null, // for user object
+  userToken, // for storing the JWT
+  error: null,
+  success: false, // for monitoring the registration process.
+};
+
+const authSlice = createSlice({
+  name: 'auth',
+  initialState,
+  reducers: {
+    logout: (state) => {
+      localStorage.removeItem('userToken'); // delete token from storage
+      state.loading = false;
+      state.userInfo = null;
+      state.userToken = null;
+      state.error = null;
+    },
+    setCredentials: (state, { payload }) => {
+      state.userInfo = payload;
+    },
+    clearError: (state) => {
+      state.error = null;
+    }
+  },
+  extraReducers: (builder) => {
+    // Login cases
+    builder.addCase(loginUser.pending, (state) => {
+      state.loading = true;
+      state.error = null;
+    });
+    builder.addCase(loginUser.fulfilled, (state, { payload }) => {
+      state.loading = false;
+      state.userInfo = payload.user;
+      state.userToken = payload.token;
+    });
+    builder.addCase(loginUser.rejected, (state, { payload }) => {
+      state.loading = false;
+      state.error = payload;
+    });
+    // Signup cases
+    builder.addCase(signupUser.pending, (state) => {
+      state.loading = true;
+      state.error = null;
+    });
+    builder.addCase(signupUser.fulfilled, (state, { payload }) => {
+      state.loading = false;
+      state.success = true;
+      // Optional: Auto-login if you want
+      if (payload.token) {
+        state.userToken = payload.token;
+        state.userInfo = payload.user;
+      }
+    });
+    builder.addCase(signupUser.rejected, (state, { payload }) => {
+      state.loading = false;
+      state.error = payload;
+    });
+    builder.addCase(forgotPassword.pending, (state) => {
+    state.loading = true;
+    state.error = null;
+    })
+    builder.addCase(forgotPassword.fulfilled, (state) => {
+      state.loading = false;
+      state.success = true;
+    })
+    builder.addCase(forgotPassword.rejected, (state, { payload }) => {
+      state.loading = false;
+      state.error = payload;
+    })
+    builder.addCase(verifyPasswordToken.pending, (state) => {
+      state.loading = true;
+      state.error = null;
+    })
+    builder.addCase(verifyPasswordToken.fulfilled, (state, { payload }) => {
+      state.loading = false;
+      state.success = true;
+      // Store email for reset password flow if needed
+      state.resetPasswordEmail = payload.email;
+    })
+    builder.addCase(verifyPasswordToken.rejected, (state, { payload }) => {
+      state.loading = false;
+      state.error = payload;
+    });
+    builder.addCase(resetPassword.pending, (state) => {
+      state.loading = true;
+      state.error = null;
+    })
+    builder.addCase(resetPassword.fulfilled, (state) => {
+      state.loading = false;
+      state.success = true;
+    })
+    builder.addCase(resetPassword.rejected, (state, { payload }) => {
+      state.loading = false;
+      state.error = payload;
+    });
+  },
+});
+
+export const { logout, setCredentials, clearError } = authSlice.actions;
+
+export default authSlice.reducer;

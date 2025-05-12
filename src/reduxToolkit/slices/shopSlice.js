@@ -1,4 +1,90 @@
-import { createSlice } from "@reduxjs/toolkit";
+import { createSlice,createAsyncThunk } from "@reduxjs/toolkit";
+
+import axios from "axios";
+
+
+export const createShopAPI = createAsyncThunk(
+  'shops/createShop',
+  async (shopData, { getState, rejectWithValue }) => {
+    try {
+      const token = localStorage.getItem('userToken');
+      console.log('token:', token);
+      
+      const response = await axios.post(
+        "http://52.90.112.216/api/shop/create",
+        shopData,
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
+          },
+        }
+      );
+      console.log('Create Shop Response:', response.data);
+      return response.data;
+    } catch (error) {
+      const errorMessage = error.response?.data?.message || error.message;
+      console.log('Create Shop Error', errorMessage);
+      return rejectWithValue(errorMessage);
+    }
+  }
+);
+
+// Async Thunk with Axios and Token Handling
+export const createShopAdminAPI = createAsyncThunk(
+  'shops/createShopAdmin',
+  async (adminData, { getState, rejectWithValue }) => {
+    try {
+      const token = localStorage.getItem('userToken'); // Get token from storage
+      console.log('token:',token)
+      
+      const response = await axios.post(
+        "http://52.90.112.216/api/user/createShopAdmin",
+        adminData,
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
+          },
+        }
+      );
+      console.log('Create Admin Response:',response.data)
+      return response.data;
+    } catch (error) {
+      // Handle specific error messages from API
+      const errorMessage = error.response?.data?.message || error.message;
+      console.log('Create Admin Error',errorMessage)
+      return rejectWithValue(errorMessage);
+    }
+  }
+);
+
+export const updateShopAdminAPI = createAsyncThunk(
+  'shops/updateShopAdmin',
+  async ({ id, adminData }, { getState, rejectWithValue }) => {
+    try {
+      const token = localStorage.getItem('userToken');
+      console.log('Updating admin with data:', adminData);
+      
+      const response = await axios.put(
+        `http://52.90.112.216/api/user/updateShopAdmin/${id}`,
+        adminData,
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
+          },
+        }
+      );
+      console.log('Update Admin Response:', response.data);
+      return { id, ...response.data }; // Return both id and updated data
+    } catch (error) {
+      const errorMessage = error.response?.data?.message || error.message;
+      console.log('Update Admin Error', errorMessage);
+      return rejectWithValue(errorMessage);
+    }
+  }
+);
 
 const initialState = {
   shops: [
@@ -110,6 +196,7 @@ const initialState = {
           location: "Newyork Street, America",
           shop: 'Nike Shop',
           email: 'johnmark@gmail.com',
+          phone: '8435644990'
         },
         {
           id: 2,
@@ -118,6 +205,7 @@ const initialState = {
           location: "Newyork Street, America",
           shop: 'Sailor Shop',
           email: 'peterparker@gmail.com',
+          phone: '8824566984'
         },
         {
           id: 3,
@@ -126,6 +214,7 @@ const initialState = {
           location: "Newyork Street, America",
           shop: 'Infinity Shop',
           email: 'ronymark@gmail.com',
+          phone: '8435644980'
         },
         {
           id: 4,
@@ -134,6 +223,7 @@ const initialState = {
           location: "Newyork Street, America",
           shop: 'Brand Shop',
           email: 'reacher@gmail.com',
+          phone: '8349127063'
         },
         {
           id: 5,
@@ -142,6 +232,7 @@ const initialState = {
           location: "Newyork Street, America",
           shop: 'Nike Shop',
           email: 'johnmark@gmail.com',
+          phone: '8435644990'
         },
         {
           id: 6,
@@ -150,6 +241,7 @@ const initialState = {
           location: "Newyork Street, America",
           shop: 'Sailor Shop',
           email: 'peterparker@gmail.com',
+          phone: '8445744990'
         },
         {
           id: 7,
@@ -158,6 +250,7 @@ const initialState = {
           location: "Newyork Street, America",
           shop: 'Infinity Shop',
           email: 'ronymark@gmail.com',
+          phone: '8435532990'
         },
         {
           id: 8,
@@ -166,6 +259,7 @@ const initialState = {
           location: "Newyork Street, America",
           shop: 'Brand Shop',
           email: 'reacher@gmail.com',
+          phone: '8435644560'
         },
       ]  
 };
@@ -199,7 +293,69 @@ const shopsSlice = createSlice({
         editAdmin: (state, action) => {
           return {...state, admins: state.admins.map((ele) => ele.id === action.payload.id ? {...ele, ...action.payload} : ele)}
         }
-    }
+    },
+    extraReducers: (builder) => {
+      builder
+        .addCase(createShopAdminAPI.pending, (state) => {
+          state.status = 'loading';
+          state.error = null;
+        })
+        .addCase(createShopAdminAPI.fulfilled, (state, action) => {
+          state.status = 'succeeded';
+          state.admins.push({
+            id: action.payload.id || Date.now(),
+            name: action.payload.name,
+            image: action.payload.image || "https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png",
+            location: action.payload.location,
+            shop: action.payload.shop,
+            email: action.payload.email,
+            phone: action.payload.phone,
+          });
+        })
+        .addCase(createShopAdminAPI.rejected, (state, action) => {
+          state.status = 'failed';
+          state.error = action.payload;
+        })
+
+      .addCase(createShopAPI.pending, (state) => {
+        state.status = 'loading';
+        state.error = null;
+      })
+      .addCase(createShopAPI.fulfilled, (state, action) => {
+        state.status = 'succeeded';
+        state.shops.push({
+          id: action.payload.id || Date.now(),
+          name: action.payload.name,
+          image: action.payload.image || "https://via.placeholder.com/150",
+          location: action.payload.location,
+          coordinates: action.payload.coordinates || { lat: 0, lng: 0 },
+          adminCount: action.payload.adminCount || 0,
+          cameras: action.payload.cameras || [],
+        });
+      })
+      .addCase(createShopAPI.rejected, (state, action) => {
+        state.status = 'failed';
+        state.error = action.payload;
+      })
+      .addCase(updateShopAdminAPI.pending, (state) => {
+      state.status = 'loading';
+      state.error = null;
+    })
+    .addCase(updateShopAdminAPI.fulfilled, (state, action) => {
+      state.status = 'succeeded';
+      const index = state.admins.findIndex(admin => admin.id === action.payload.id);
+      if (index !== -1) {
+        state.admins[index] = {
+          ...state.admins[index],
+          ...action.payload
+        };
+      }
+    })
+    .addCase(updateShopAdminAPI.rejected, (state, action) => {
+      state.status = 'failed';
+      state.error = action.payload;
+    });
+    },
 });
 
 export const { addShop, updateShop, deleteShop, addAdmin, editAdmin, selectShop, clearSelectedShop } = shopsSlice.actions;

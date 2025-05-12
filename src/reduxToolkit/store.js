@@ -5,7 +5,7 @@ import anomalyReducer from './slices/anomalySlice'
 import subscriptionReducer from './slices/subscriptionSlice'
 import visitorReducer from './slices/visitorsSlice'
 import ticketsReducer from './slices/ticketSlice'
-import userReducer from './slices/userSlice'
+import authReducer from './slices/authSlice'
 
 const store = configureStore({
     reducer: {
@@ -15,7 +15,7 @@ const store = configureStore({
         subscription: subscriptionReducer,
         visitor: visitorReducer,
         tickets: ticketsReducer,
-        user: userReducer,
+        auth: authReducer,
     }
 });
 

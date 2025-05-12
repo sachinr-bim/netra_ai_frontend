@@ -2,7 +2,6 @@ import { useState, useEffect, useRef } from "react";
 
 // Packages and Libraries
 import { Routes, Route, useLocation, Navigate } from "react-router-dom";
-import Swal from "sweetalert2";
 
 // Components
 import Sidebar from "./Sidebar";
@@ -34,7 +33,7 @@ import SupportIcon from "../../assets/icons/SupportIcon";
 import ReportsIcon from "../../assets/icons/ReportsIcon";
 import EditIcon from "../../assets/icons/EditIcon";
 
-export default function Navigation({handleLogin,isLoggedIn}) {
+export default function Navigation({handleLogin,handleLogout,isLoggedIn}) {
 
     const Location = useLocation()
     const pathName = Location.pathname
@@ -130,43 +129,6 @@ export default function Navigation({handleLogin,isLoggedIn}) {
     const handleContentChange = (contentName) => {
         setCurrentContent(contentName);
     };
-
-    const handleLogout = () => {
-        const swalWithBootstrapButtons = Swal.mixin({
-            customClass: {
-              confirmButton: "px-4 py-2 bg-[var(--theme-color)] text-white rounded-sm m-2 hover:bg-white hover:text-[var(--theme-color)] hover:border hover:border-[var(--theme-color)]",
-              cancelButton: "p-4 py-2 bg-red-500 text-white rounded-sm hover:bg-white hover:text-red-500 hover:border hover:border-red-500"
-            },
-            buttonsStyling: false
-          });
-          swalWithBootstrapButtons.fire({
-            title: "Are you sure?",
-            text: "Are you sure you want to logout?",
-            icon: "warning",
-            showCancelButton: true,
-            confirmButtonText: "Yes",
-            cancelButtonText: "No",
-            reverseButtons: true
-          }).then((result) => {
-            if (result.isConfirmed) {
-                handleLogin()
-              swalWithBootstrapButtons.fire({
-                title: "Logged out!",
-                text: "Successfully Logged out",
-                icon: "success"
-              });
-            } else if (
-              /* Read more about handling dismissals below */
-              result.dismiss === Swal.DismissReason.cancel
-            ) {
-              swalWithBootstrapButtons.fire({
-                title: "Cancelled",
-                text: "Logout Cancelled :)",
-                icon: "error"
-              });
-            }
-          });
-    }
 
     // Check if current route is subscription
     const isSubscriptionPage = pathName === '/subscription';

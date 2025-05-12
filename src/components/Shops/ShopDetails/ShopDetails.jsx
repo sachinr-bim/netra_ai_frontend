@@ -13,7 +13,7 @@ import ShopDetailsMenu from "./ShopDetailsMenu/ShopDetailsMenu";
 import Overview from "./ShopDetailsMenu/Overview";
 import EdgeDevice from "../ShopDetails/ShopDetailsMenu/EdgeDevice/EdgeDevice";
 import AddCamera from "./ShopDetailsMenu/AddCamera";
-import ShopCurrentPlan from "./ShopDetailsMenu/ShopCurrentPlan";
+import ShopCurrentPlan from "./ShopDetailsMenu/CurrentPlan/ShopCurrentPlan";
 import DeleteShop from "./ShopDetailsMenu/DeleteShop";
 import ShopMapView from "../ShopMapView";
 

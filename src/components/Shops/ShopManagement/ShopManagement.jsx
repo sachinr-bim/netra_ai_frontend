@@ -81,7 +81,7 @@ export default function ShopManagement() {
             
             <div className="flex justify-between items-start">
               <h2 className="text-lg md:text-xl font-semibold mb-2 line-clamp-1">{shop.name}</h2>
-              <button className="text-xl md:text-2xl font-semibold">⋮</button>
+              {/* <button className="text-xl md:text-2xl font-semibold">⋮</button> */}
             </div>
             
             <div className="space-y-1">

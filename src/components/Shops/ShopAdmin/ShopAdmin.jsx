@@ -32,7 +32,7 @@ export default function ShopAdmin() {
             {/* Edit Admin Modal */}
             {editingAdmin && (
                 <EditAdmin isOpen={!!editingAdmin} onClose={handleClose} id={editingAdmin.id} image={editingAdmin.image} name={editingAdmin.name} 
-                location={editingAdmin.location} shop={editingAdmin.shop} email={editingAdmin.email} />
+                location={editingAdmin.location} shop={editingAdmin.shop} email={editingAdmin.email} phone={editingAdmin.phone} />
             )}
             {/* Edit Admin Modal End */}
 
@@ -84,6 +84,7 @@ export default function ShopAdmin() {
                             </p>
                             <p className="text-gray-600 text-sm md:text-base">{ele.shop} Admin</p>
                             <p className="text-gray-600 text-sm md:text-base truncate">{ele.email}</p>
+                            <p className="text-gray-600 text-sm md:text-base truncate">{ele.phone}</p>
                         </div>
                     </div>
                 ))}

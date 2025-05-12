@@ -1,18 +1,22 @@
-import { useState } from "react";
-
-// Packages and Libraries
+import { useState, useEffect } from "react";
+import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from "react-router-dom";
+import { loginUser, clearError } from '../../reduxToolkit/slices/authSlice'; // Update the import path
 
 // Icons
-import GoogleIcon from "../../assets/icons/GoogleIcon";
+//import GoogleIcon from "../../assets/icons/GoogleIcon";
 
 // Images
 import netra3Icon from "../../assets/images/netraIcon.png"
 import authImage from "../../assets/images/authImage.png"
 
-export default function Login({ handleLogin }) {
-
-  const navigate = useNavigate()
+export default function Login({handleLogin}) {
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+  
+  const { loading, userToken, error, success } = useSelector(
+    (state) => state.auth
+  );
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -20,11 +24,23 @@ export default function Login({ handleLogin }) {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    handleLogin({ email, password, rememberMe });
+    dispatch(loginUser({ email, password }));
   };
 
-  const navigateToSignUp = () => navigate("/signup")
-  const navigateToForgotPassword = () => navigate("/forgotPassword")
+  const navigateToSignUp = () => navigate("/signup");
+  const navigateToForgotPassword = () => navigate("/forgotPassword");
+
+  useEffect(() => {
+    // Clear any previous errors when component mounts
+    dispatch(clearError());
+  }, [dispatch]);
+
+  useEffect(() => {
+    // Redirect user if login is successful
+    if (success || userToken) {
+      handleLogin() // or your desired redirect path
+    }
+  }, [userToken, success]);
 
   return (
     <div className="flex bg-white min-h-screen">
@@ -39,6 +55,12 @@ export default function Login({ handleLogin }) {
         <div className="w-full max-w-md">
           <h2 className="text-2xl font-bold mb-1">Sign in account</h2>
           <p className="text-gray-500 mb-6">Collaborate with the best brands.</p>
+
+          {error && (
+            <div className="mb-4 p-3 bg-red-100 text-red-700 rounded-md">
+              {error}
+            </div>
+          )}
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <input
@@ -61,7 +83,12 @@ export default function Login({ handleLogin }) {
 
             <div className="flex items-center justify-between text-md">
               <label className="flex items-center gap-2">
-                <input type="checkbox" checked={rememberMe} onChange={() => setRememberMe(!rememberMe)} className="accent-orange-500" />
+                <input 
+                  type="checkbox" 
+                  checked={rememberMe} 
+                  onChange={() => setRememberMe(!rememberMe)} 
+                  className="accent-orange-500" 
+                />
                 Remember me
               </label>
               <a onClick={navigateToForgotPassword} className="text-[var(--theme-color)] hover:underline cursor-pointer">
@@ -69,8 +96,12 @@ export default function Login({ handleLogin }) {
               </a>
             </div>
 
-            <button type="submit" className="w-full py-3 bg-[var(--theme-color)] text-white rounded-md hover:bg-white border border-[var(--theme-color)] hover:text-[var(--theme-color)] transition" >
-              Continue
+            <button 
+              type="submit" 
+              className="w-full py-3 bg-[var(--theme-color)] text-white rounded-md hover:bg-white border border-[var(--theme-color)] hover:text-[var(--theme-color)] transition"
+              disabled={loading}
+            >
+              {loading ? 'Logging in...' : 'Continue'}
             </button>
 
             {/* <div className="flex items-center gap-2 my-4">
@@ -88,7 +119,7 @@ export default function Login({ handleLogin }) {
           </form>
 
           <p className="text-sm mt-4 text-center text-gray-600">
-            Don’t have an account?{" "}
+            Don't have an account?{" "}
             <a className="text-orange-500 cursor-pointer hover:underline" onClick={navigateToSignUp}>
               Signup
             </a>

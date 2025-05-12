@@ -1,13 +1,13 @@
 // Packages and Libraries
-//import { useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 // Images
 import netra3Icon from "../../../assets/images/netraIcon.png"
 import authImage from "../../../assets/images/authImage.png"
 
-export default function PasswordResetSuccess({handleLogin}) {
+export default function PasswordResetSuccess() {
 
-//   const navigate = useNavigate()
+ const navigate = useNavigate()
 
 
   return (
@@ -24,7 +24,7 @@ export default function PasswordResetSuccess({handleLogin}) {
           <h2 className="text-3xl font-bold mb-1">Successfull Password Reset</h2>
           <p className="text-gray-500 mb-6">You can use your new password to login your account</p>
 
-          <button type="submit" className="w-full py-3 bg-[var(--theme-color)] text-white font-Georgia rounded-md hover:bg-white border border-[var(--theme-color)] hover:text-[var(--theme-color)] transition" onClick={handleLogin} >
+          <button type="submit" className="w-full py-3 bg-[var(--theme-color)] text-white font-Georgia rounded-md hover:bg-white border border-[var(--theme-color)] hover:text-[var(--theme-color)] transition" onClick={() => navigate('/login')} >
             Get Started
           </button>
 
