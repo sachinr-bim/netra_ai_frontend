@@ -1,36 +1,117 @@
-import { createSlice } from "@reduxjs/toolkit";
+// paymentsSlice.js
+import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
+import axios from "axios";
+
+const API_URL = "http://52.90.112.216/api/payment/tenant/";
+
+export const fetchPayments = createAsyncThunk(
+  "payments/fetchPayments",
+  async (_, { rejectWithValue, getState }) => {
+    try {
+      const token = getState().auth.userToken;
+      const response = await axios.get(API_URL, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response.data);
+    }
+  }
+);
+
+export const fetchPaymentDetails = createAsyncThunk(
+  "payments/fetchPaymentDetails",
+  async (paymentId, { rejectWithValue, getState }) => {
+    try {
+      const token = getState().auth.userToken;
+      const response = await axios.get(`http://52.90.112.216/api/payment/${paymentId}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response.data);
+    }
+  }
+);
+
+export const updateExistingPayment = createAsyncThunk(
+  "payments/updateExistingPayment",
+  async ({ id, updatedData }, { rejectWithValue, getState }) => {
+    try {
+      const token = getState().auth.userToken;
+      const response = await axios.put(`${API_URL}${id}/`, updatedData, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response.data);
+    }
+  }
+);
+
+export const deleteExistingPayment = createAsyncThunk(
+  "payments/deleteExistingPayment",
+  async (id, { rejectWithValue, getState }) => {
+    try {
+      const token = getState().auth.userToken;
+      await axios.delete(`${API_URL}${id}/`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      return id;
+    } catch (error) {
+      return rejectWithValue(error.response.data);
+    }
+  }
+);
 
 const initialState = {
-    payments: [
-        { id: 'INV-23487645', date: 'Mar 1, 2025', amount: '99$', plan: 'Basic', method: 'Paypal', status: 'Pending' },
-        { id: 'INV-23487645', date: 'Mar 16, 2025', amount: '108$', plan: 'Premium', method: 'Paypal', status: 'Pending' },
-        { id: 'INV-23487645', date: 'Mar 27, 2025', amount: '200$', plan: 'Premium', method: 'Paypal', status: 'Pending' },
-        { id: 'INV-23487645', date: 'Mar 1, 2025', amount: '99$', plan: 'Basic', method: 'Paypal', status: 'Pending' },
-        { id: 'INV-23487645', date: 'Mar 16, 2025', amount: '108$', plan: 'Premium', method: 'Paypal', status: 'Paid' },
-        { id: 'INV-23487645', date: 'Mar 27, 2025', amount: '200$', plan: 'Premium', method: 'Paypal', status: 'Paid' },
-        { id: 'INV-23487645', date: 'Mar 1, 2025', amount: '99$', plan: 'Basic', method: 'Paypal', status: 'Declined' },
-        { id: 'INV-23487645', date: 'Mar 16, 2025', amount: '108$', plan: 'Premium', method: 'Paypal', status: 'Paid' },
-        { id: 'INV-23487645', date: 'Mar 27, 2025', amount: '200$', plan: 'Premium', method: 'Paypal', status: 'Paid' },
-      ]
+  payments: [],
+  status: "idle",
+  error: null,
 };
 
 const paymentsSlice = createSlice({
-    name: "payments",
-    initialState,
-    reducers: {
-        addPayment: (state, action) => {
-            state.payments.push(action.payload);
-        },
-        updatePayment: (state, action) => {
-            const { index, updatedPayment } = action.payload;
-            state.payments[index] = updatedPayment;
-        },
-        deletePayment: (state, action) => {
-            state.payments.splice(action.payload, 1);
+  name: "payments",
+  initialState,
+  reducers: {},
+  extraReducers(builder) {
+    builder
+      .addCase(fetchPayments.pending, (state) => {
+        state.status = "loading";
+      })
+      .addCase(fetchPayments.fulfilled, (state, action) => {
+        state.status = "succeeded";
+        state.payments = action.payload;
+      })
+      .addCase(fetchPayments.rejected, (state, action) => {
+        state.status = "failed";
+        state.error = action.payload;
+      })
+      .addCase(updateExistingPayment.fulfilled, (state, action) => {
+        const index = state.payments.findIndex(
+          payment => payment.id === action.payload.id
+        );
+        if (index !== -1) {
+          state.payments[index] = action.payload;
         }
-    }
+      })
+      .addCase(deleteExistingPayment.fulfilled, (state, action) => {
+        state.payments = state.payments.filter(
+          payment => payment.id !== action.payload
+        );
+      })
+      .addCase(fetchPaymentDetails.pending, (state) => {
+      state.detailsStatus = "loading";
+      })
+      .addCase(fetchPaymentDetails.fulfilled, (state, action) => {
+        state.detailsStatus = "succeeded";
+        state.currentPayment = action.payload;
+      })
+      .addCase(fetchPaymentDetails.rejected, (state, action) => {
+        state.detailsStatus = "failed";
+        state.detailsError = action.payload;
+      });
+  }
 });
-
-export const { addPayment, updatePayment, deletePayment } = paymentsSlice.actions;
 
 export default paymentsSlice.reducer;

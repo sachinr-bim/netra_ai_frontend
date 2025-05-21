@@ -1,88 +1,113 @@
-import { useState } from "react";
-
-// Redux
-import { useSelector } from "react-redux";
-
-// Components
+import { useState, useEffect } from "react";
+import { useSelector, useDispatch } from "react-redux";
+import { fetchAnomaliesForTenant } from "../../reduxToolkit/slices/anomalySlice";
+import { fetchShopsByTenantAPI } from "../../reduxToolkit/slices/shopSlice";
 import AnomalyFilter from "./AnomalyFilter";
 import AnomalyTable from "./AnomalyTable";
-
-// Icons
 import SearchIcon from "../../assets/icons/SearchIcon";
 
 export default function Anomaly() {
-  const { anomaly } = useSelector(state => state.anomaly);
-  const { shops } = useSelector(state => state.shops);
-  const detectionTypes = [...new Set(anomaly.map(item => item.detectionType))];
+  const dispatch = useDispatch();
+  const anomalies = useSelector(state => state.anomaly.anomalies);
+  const loading = useSelector(state => state.anomaly.loading);
+  const shops = useSelector(state => state.shops.shops);
   
+
+
   const [searchTerm, setSearchTerm] = useState("");
   const [showFilters, setShowFilters] = useState(false);
-  const [selectedShopName, setSelectedShopName] = useState("");
-  const [filters, setFilters] = useState({ detectionType: "", feedbackStatus: "" });
-
-  const hasActiveFilters = selectedShopName || searchTerm || filters.detectionType || filters.feedbackStatus;
-
-  const filteredAnomalies = anomaly.filter(ele => {
-    const matchesSearch = !searchTerm || 
-      [ele.shopName, ele.cameraName, ele.detectionType].some(field => 
-        field.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-    const matchesShop = !selectedShopName || ele.shopName === selectedShopName;
-    const matchesType = !filters.detectionType || ele.detectionType === filters.detectionType;
-    const matchesFeedback = !filters.feedbackStatus || 
-      (filters.feedbackStatus === "withFeedback" ? ele.userFeedback : !ele.userFeedback);
-      
-    return matchesSearch && matchesShop && matchesType && matchesFeedback;
+  const [filters, setFilters] = useState({ 
+    anomalyType: "", 
+    feedbackStatus: "" 
   });
 
-  const clearFilters = () => {
-    setSelectedShopName("");
-    setSearchTerm("");
-    setFilters({ detectionType: "", feedbackStatus: "" });
-  };
+  useEffect(() => {
+    dispatch(fetchAnomaliesForTenant());
+  }, [dispatch]);
+
+    useEffect(() => {
+      dispatch(fetchShopsByTenantAPI());
+    }, [dispatch]);
+
+  // DEBUG: Log the raw anomalies data
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[var(--theme-color)]"></div>
+      </div>
+    );
+  }
+
+  // Format anomalies data - SIMPLIFIED without error handling
+  const formattedAnomalies = anomalies.map(anomaly => {
+    const shop = shops.find(shop => shop.id === anomaly.shop_id);
+    return {
+      id: anomaly.anomaly_id,
+      dateTime: new Date(anomaly.event_recorded_dt).toLocaleString(),
+      shopName: shop ? shop.name : `Shop ${anomaly.shop_id}`,
+      cameraName: `Camera ${anomaly.camera_id}`,
+      detectionType: anomaly.anomaly_type,
+      anomalyName: anomaly.anomaly_name,
+      videoLink: anomaly.video_link,
+      userFeedback: anomaly.feedback,
+      correctedLabel: anomaly.modified_by !== anomaly.created_by ? 'Corrected' : 'Unverified'
+    };
+  });
+
+  // Filter anomalies
+  const filteredAnomalies = formattedAnomalies.filter(anomaly => {
+    const matchesSearch = !searchTerm || 
+      anomaly.shopName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      anomaly.cameraName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      anomaly.detectionType.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      anomaly.anomalyName.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    const matchesType = !filters.anomalyType || 
+      anomaly.detectionType === filters.anomalyType;
+    
+    const matchesFeedback = !filters.feedbackStatus || 
+      (filters.feedbackStatus === "withFeedback" ? anomaly.userFeedback : !anomaly.userFeedback);
+      
+    return matchesSearch && matchesType && matchesFeedback;
+  });
+
+  // Get unique anomaly types for filter dropdown
+  const anomalyTypes = [...new Set(anomalies.map(anomaly => anomaly.anomaly_type))];
 
   return (
     <div className="bg-gray-100 p-4 md:p-6">
-      {/* Search and Filter Bar */}
       <div className="bg-white mb-6 p-4 md:p-7 rounded-xl">
         <div className="flex flex-col md:flex-row gap-4">
           <div className="relative flex-grow">
             <SearchIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
             <input
               type="text"
-              placeholder="Search here..."
+              placeholder="Search anomalies..."
               className="w-full pl-10 pr-4 py-3 bg-gray-100 rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--theme-color)]"
               value={searchTerm}
               onChange={e => setSearchTerm(e.target.value)}
             />
           </div>
           
-          <div className="flex gap-2">
-            <button 
-              onClick={() => setShowFilters(!showFilters)}
-              className="px-4 py-2 border border-[var(--theme-color)] text-[var(--theme-color)] rounded-md hover:bg-[var(--theme-color)] hover:text-white transition-colors"
-            >
-              {showFilters ? 'Close Filter' : 'Filters'}
-            </button>
-            {hasActiveFilters && (
-              <button 
-                onClick={clearFilters}
-                className="px-4 py-2 text-gray-600 rounded-md hover:bg-gray-100 transition-colors"
-              >
-                Clear
-              </button>
-            )}
-          </div>
+          <button 
+            onClick={() => setShowFilters(!showFilters)}
+            className="px-4 py-2 border border-[var(--theme-color)] text-[var(--theme-color)] rounded-md hover:bg-[var(--theme-color)] hover:text-white transition-colors"
+          >
+            {showFilters ? 'Hide Filters' : 'Filters'}
+          </button>
         </div>
 
-        {/* Expanded Filters Section */}
-        <AnomalyFilter shops={shops} detectionTypes={detectionTypes} showFilters={showFilters} selectedShopName={setSelectedShopName} setSelectedShopName={setSelectedShopName} filters={filters} setFilters={setFilters} />
-        
+        {showFilters && (
+          <AnomalyFilter 
+            anomalyTypes={anomalyTypes} 
+            filters={filters}
+            setFilters={setFilters}
+          />
+        )}
       </div>
 
-      {/* Anomaly Table */}
-      <AnomalyTable filteredAnomalies={filteredAnomalies} />
-      
+      <AnomalyTable anomalies={filteredAnomalies} />
     </div>
   );
 }

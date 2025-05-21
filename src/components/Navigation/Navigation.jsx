@@ -8,7 +8,7 @@ import Sidebar from "./Sidebar";
 import Navbar from "./Navbar";
 import Dashboard from "../Dashboard/Dashboard";
 import ShopManagement from "../Shops/ShopManagement/ShopManagement";
-import ShopAdmin from "../Shops/ShopAdmin/ShopAdmin";
+import ShopAdmin from "../Shops/ShopDetails/ShopDetailsMenu/ShopAdmin/ShopAdmin";
 import PaymentHistory from "../Payment/PaymentHistory";
 import Anomaly from "../Anomaly/Anomaly";
 import Settings from "../Settings/Settings";
@@ -22,6 +22,7 @@ import PasswordResetSuccess from "../Auth/Success/PasswordResetSuccess";
 import SignupSuccess from "../Auth/Success/SignupSuccess";
 import Support from "../Support/Support";
 import SupportRequest from "../Support/SupportRequest";
+import EditTicket from "../Support/EditTicket"
 
 // Icons
 import HomeIcon from "../../assets/icons/HomeIcon";
@@ -84,19 +85,17 @@ export default function Navigation({handleLogin,handleLogout,isLoggedIn}) {
     const sideBarContent = [
         { name: "Dashboard", path: "/", icon: <HomeIcon /> },
         { name: "Shop Management", path: "/shopManagement", icon: <EditIcon size={20} height="1em" />},
-        { name: "Shop Admin", path: "/shopAdmin", icon: <ShopAdminIcon /> },
         { name: "Payment History", path: "/paymentList", icon: <PaymentIcon /> },
         { name: "Anomaly List", path: "/anomalyList", icon: <AnomalyIcon /> },
         { name: "Settings", path: "/settings", icon: <SettingsIcon /> },
         { name: "Support", path: "/support", icon: <SupportIcon /> },
-        { name: "Reports", path: "/reports", icon: <ReportsIcon />}
+        // { name: "Reports", path: "/reports", icon: <ReportsIcon />}
     ];
 
     const routes = [
         { path: '/', element: <ProtectedRoute> <Dashboard setSideBarOpen={setSideBarOpen} /> </ProtectedRoute>  }, 
         { path: '/shopManagement', element: <ProtectedRoute> <ShopManagement /> </ProtectedRoute>  },
         { path: '/shopDetails/:id', element: <ProtectedRoute> <ShopDetails /> </ProtectedRoute>  },
-        { path: '/shopAdmin', element: <ProtectedRoute> <ShopAdmin /> </ProtectedRoute> },
         { path: '/paymentList', element: <ProtectedRoute> <PaymentHistory /> </ProtectedRoute>  },
         { path: '/anomalyList', element: <ProtectedRoute> <Anomaly /> </ProtectedRoute> },
         { path: '/settings', element: <ProtectedRoute> <Settings /> </ProtectedRoute> },
@@ -109,6 +108,7 @@ export default function Navigation({handleLogin,handleLogout,isLoggedIn}) {
         { path: '/signupSuccess', element: <PublicRoute> <SignupSuccess handleLogin={handleLogin} /> </PublicRoute> },
         { path: '/support', element: <ProtectedRoute> <Support /> </ProtectedRoute> },
         { path: '/supportRequest', element: <ProtectedRoute> <SupportRequest /> </ProtectedRoute> },
+        { path: '/editTicket/:id', element: <ProtectedRoute> <EditTicket /> </ProtectedRoute> }
     ];
 
     const nonAuthRoutes = [

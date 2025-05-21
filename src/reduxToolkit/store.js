@@ -6,6 +6,8 @@ import subscriptionReducer from './slices/subscriptionSlice'
 import visitorReducer from './slices/visitorsSlice'
 import ticketsReducer from './slices/ticketSlice'
 import authReducer from './slices/authSlice'
+import cameraReducer from './slices/cameraSlice'
+import edgeDeviceReducer from './slices/edgeDeviceSlice' 
 
 const store = configureStore({
     reducer: {
@@ -16,6 +18,8 @@ const store = configureStore({
         visitor: visitorReducer,
         tickets: ticketsReducer,
         auth: authReducer,
+        cameras: cameraReducer,
+        edgeDevice: edgeDeviceReducer
     }
 });
 

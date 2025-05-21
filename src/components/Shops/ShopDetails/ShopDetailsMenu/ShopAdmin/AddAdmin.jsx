@@ -1,38 +1,42 @@
 import React, { useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
-import { createShopAdminAPI } from '../../../reduxToolkit/slices/shopSlice'
+import { createShopAdminAPI,getShopAdminsAPI } from '../../../../../reduxToolkit/slices/shopSlice'
 
-export default function AddAdmin({ isOpen, onClose }) {
+export default function AddAdmin({ isOpen, onClose, tenantId }) {
     const dispatch = useDispatch()
     const { status, error } = useSelector((state) => state.shops)
     const shops = useSelector((state) => state.shops.shops) // For shop dropdown
 
-    const [adminName, setAdminName] = useState("")
-    const [location, setLocation] = useState("")
-    const [shopName, setShopName] = useState("")
+    const [firstName, setFirstName] = useState("")
+    const [lastName, setLastName] = useState("")
     const [email, setEmail] = useState("")
-    const [phone, setPhone] = useState('')
+    const [phoneNumber, setPhoneNumber] = useState('')
+    const [password, setPassword] = useState('')
+    const [shopId, setShopId] = useState("") // Changed to shopId since API likely needs ID
 
     const handleAdd = async (e) => {
         e.preventDefault()
         
         const adminData = {
-            name: adminName,
-            location,
-            shop: shopName,
+            firstname: firstName,
+            lastname: lastName,
             email,
-            phone
+            phone_number: phoneNumber,
+            password_hash: password,
+            shop_id: shopId // Assuming your API needs shop ID
         }
 
         try {
             await dispatch(createShopAdminAPI(adminData)).unwrap()
             // Reset form on success
-            setAdminName("")
-            setLocation("")
-            setShopName("")
+            setFirstName("")
+            setLastName("")
             setEmail("")
-            setPhone("")
+            setPhoneNumber("")
+            setPassword("")
+            setShopId("")
             onClose()
+            dispatch(getShopAdminsAPI(tenantId))
         } catch (err) {
             // Error is already handled in Redux slice
             console.error('Failed to create admin:', err)
@@ -56,9 +60,6 @@ export default function AddAdmin({ isOpen, onClose }) {
                         <button className="mt-2 px-2 py-1 md:px-3 md:py-1 text-xs md:text-sm border rounded-md hover:bg-gray-100">
                             Upload new picture
                         </button>
-                        <button className="mt-2 px-3 py-1 md:px-4 md:py-2 text-xs md:text-sm bg-gray-200 text-black rounded-full hover:bg-[var(--theme-color)] hover:text-white transition-colors duration-200 whitespace-nowrap">
-                            Delete
-                        </button>
                     </div>
 
                     {error && (
@@ -68,56 +69,46 @@ export default function AddAdmin({ isOpen, onClose }) {
                     )}
 
                     <form onSubmit={handleAdd}>
-                        <div className="mb-3">
-                            <label htmlFor="adminName" className="block text-sm md:text-base lg:text-xl font-semibold mb-1">Admin Name</label>  
-                            <input 
-                                type="text" 
-                                id="adminName" 
-                                name="adminName"
-                                value={adminName}
-                                onChange={(e) => setAdminName(e.target.value)}
-                                className="w-full h-10 md:h-12 p-2 border border-gray-300 rounded-lg text-sm md:text-base" 
-                                required
-                            />
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-3">
+                            <div>
+                                <label htmlFor="firstName" className="block text-sm md:text-base lg:text-xl font-semibold mb-1">First Name</label>  
+                                <input 
+                                    type="text" 
+                                    id="firstName" 
+                                    name="firstName"
+                                    value={firstName}
+                                    onChange={(e) => setFirstName(e.target.value)}
+                                    className="w-full h-10 md:h-12 p-2 border border-gray-300 rounded-lg text-sm md:text-base" 
+                                    required
+                                />
+                            </div>
+                            <div>
+                                <label htmlFor="lastName" className="block text-sm md:text-base lg:text-xl font-semibold mb-1">Last Name</label>  
+                                <input 
+                                    type="text" 
+                                    id="lastName" 
+                                    name="lastName"
+                                    value={lastName}
+                                    onChange={(e) => setLastName(e.target.value)}
+                                    className="w-full h-10 md:h-12 p-2 border border-gray-300 rounded-lg text-sm md:text-base" 
+                                    required
+                                />
+                            </div>
                         </div>
                         
                         <div className="mb-3">
-                            <label htmlFor="location" className="block text-sm md:text-base lg:text-xl font-semibold mb-1">Location</label>
-                            <input 
-                                type="text"
-                                name='location'
-                                value={location}
-                                onChange={(e) => setLocation(e.target.value)} 
-                                className="w-full h-10 md:h-12 p-2 border border-gray-300 rounded-lg text-sm md:text-base" 
-                                required
-                            />
-                        </div>
-                        
-                        <div className="mb-3">
-                            <label htmlFor="shopName" className="block text-sm md:text-base lg:text-xl font-semibold mb-1">Shop Name</label>
-                            {/* Original text input */}
-                            {/* <input 
-                                type="text" 
-                                id="shopName" 
-                                name="shopName"
-                                value={shopName}
-                                onChange={(e) => setShopName(e.target.value)}  
-                                className="w-full h-10 md:h-12 p-2 border border-gray-300 rounded-lg text-sm md:text-base" 
-                                required
-                            /> */}
-                            
-                            {/* Enhanced dropdown version */}
+                            <label htmlFor="shopId" className="block text-sm md:text-base lg:text-xl font-semibold mb-1">Shop</label>
                             <select
-                                id="shopName"
-                                name="shopName"
-                                value={shopName}
-                                onChange={(e) => setShopName(e.target.value)}
+                                id="shopId"
+                                name="shopId"
+                                value={shopId}
+                                onChange={(e) => setShopId(e.target.value)}
                                 className="w-full h-10 md:h-12 p-2 border border-gray-300 rounded-lg text-sm md:text-base bg-white"
                                 required
                             >
                                 <option value="">Select a shop</option>
                                 {shops.map(shop => (
-                                    <option key={shop.id} value={shop.name}>
+                                    <option key={shop.id} value={shop.id}>
                                         {shop.name}
                                     </option>
                                 ))}
@@ -137,17 +128,47 @@ export default function AddAdmin({ isOpen, onClose }) {
                             />
                         </div>
 
-                        <div className="mb-4">
-                            <label htmlFor="phone" className="block text-sm md:text-base lg:text-xl font-semibold mb-1">Contact No.</label>
-                            <input 
-                                type="number" 
-                                id="phone" 
-                                name='phone'
-                                value={phone}
-                                onChange={(e) => setPhone(e.target.value)}
-                                className="w-full h-10 md:h-12 p-2 border border-gray-300 rounded-lg text-sm md:text-base" 
-                                required
-                            />
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-3">
+                            <div>
+                                <label htmlFor="phoneNumber" className="block text-sm md:text-base lg:text-xl font-semibold mb-1">Phone Number</label>
+                                <input 
+                                    type="tel" 
+                                    id="phoneNumber" 
+                                    name='phoneNumber'
+                                    value={phoneNumber}
+                                    onChange={(e) => setPhoneNumber(e.target.value)}
+                                    className="w-full h-10 md:h-12 p-2 border border-gray-300 rounded-lg text-sm md:text-base" 
+                                />
+                            </div>
+                            <div>
+                                <label htmlFor="password" className="block text-sm md:text-base lg:text-xl font-semibold mb-1">Password</label>
+                                <input 
+                                    type="password" 
+                                    id="password" 
+                                    name='password'
+                                    value={password}
+                                    onChange={(e) => setPassword(e.target.value)}
+                                    className="w-full h-10 md:h-12 p-2 border border-gray-300 rounded-lg text-sm md:text-base" 
+                                    required
+                                    minLength="6"
+                                />
+                            </div>
+                            <div className='flex gap-4'>
+                                <input 
+                                    type="checkbox" 
+                                    className="md:h-12 p-2 border border-gray-300 rounded-lg text-sm md:text-base" 
+                                    required
+                                />
+                                <label htmlFor="password" className="block text-md font-semibold mb-1">Allow Admin To Add or Modify Camera </label>
+                            </div>
+                            <div className='flex gap-4' >
+                                <input 
+                                    type="checkbox" 
+                                    className="md:h-12 p-2 border border-gray-300 rounded-lg text-sm md:text-base" 
+                                    required
+                                />
+                                <label htmlFor="password" className="block text-md font-semibold mb-1">Allow Admin To Add or Modify Edge Device </label>
+                            </div>
                         </div>
 
                         <div className="flex flex-col sm:flex-row justify-end space-y-2 sm:space-y-0 sm:space-x-2">

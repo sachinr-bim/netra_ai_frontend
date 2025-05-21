@@ -1,4 +1,8 @@
-import React, { useState } from "react";
+import { useState,useEffect } from "react";
+
+// Redux
+import { useSelector, useDispatch } from "react-redux";
+import { fetchPlans } from "../../reduxToolkit/slices/subscriptionSlice";
 
 // Components
 import PlanCards from "./PlanCards";
@@ -6,23 +10,28 @@ import PlanCards from "./PlanCards";
 export default function Subscription() {
   const [isYearly, setIsYearly] = useState(false);
 
-  const plans = [
-    {
-      name: "Basic Plan",
-      price: isYearly ? 156 * 12 * 0.7 : 156,
-      features: ["Track number of visitors", "Monitoring actions for theft", "Gesture Detection"],
-    },
-    {
-      name: "Standard Plan",
-      price: isYearly ? 249 * 12 * 0.7 : 249,
-      features: ["Track number of visitors", "Monitoring actions for theft", "Gesture Detection", "Safety Monitoring"],
-    },
-    {
-      name: "Premium Plan",
-      price: isYearly ? 399 * 12 * 0.7 : 399,
-      features: ["Track number of visitors", "Suspicious behaviours", "Gesture Detection"],
-    },
-  ];
+   const dispatch = useDispatch();
+  const { plans, loading, error } = useSelector((state) => state.subscription);
+
+  useEffect(() => {
+    dispatch(fetchPlans());
+  }, [dispatch]);
+
+  if (loading) return <div>Loading plans...</div>;
+  if (error) return <div>Error: {error}</div>;
+
+  // Transform API data to match the expected format
+  const transformedPlans = plans.map(plan => ({
+    id: plan.plan_id,
+    name: plan.plan_name,
+    price: isYearly ? parseFloat(plan.price) * 12 * 0.7 : parseFloat(plan.price),
+    features: [
+      `Up to ${plan.camera_limit} cameras`,
+      `For ${plan.shop_limit} shop`,
+      plan.description,
+      ...(plan.features ? Object.entries(plan.features).map(([key, value]) => `${key}: ${value}`) : [])
+    ]
+  }));
 
   return (
     <div className="flex bg-white min-h-screen flex-col items-center py-35  px-4 md:px-20">
@@ -31,7 +40,7 @@ export default function Subscription() {
         <span className="text-[var(--theme-color)]">Netra3</span> Plans For You
       </h1>
 
-      <PlanCards plans={plans} isYearly={isYearly} setIsYearly={setIsYearly} />
+      <PlanCards plans={transformedPlans} isYearly={isYearly} setIsYearly={setIsYearly} />
     </div>
   );
 };

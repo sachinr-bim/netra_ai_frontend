@@ -6,7 +6,7 @@ import AccountSettings from "./AccountSettings";
 import Password from "./Password";
 import Notifications from "./Notifications";
 import SettingsSubscription from "./SettingsSubscription";
-import DeleteAccount from "./DeleteAccount";
+import DeleteAccount from "./DeleteAccount/DeleteAccount";
 
 export default function Settings() {
 

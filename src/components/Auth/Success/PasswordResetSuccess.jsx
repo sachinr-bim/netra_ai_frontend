@@ -9,6 +9,10 @@ export default function PasswordResetSuccess() {
 
  const navigate = useNavigate()
 
+ const handleNavigate = () => {
+  navigate('/login')
+ }
+
 
   return (
     <div className="flex bg-white min-h-screen">
@@ -24,7 +28,7 @@ export default function PasswordResetSuccess() {
           <h2 className="text-3xl font-bold mb-1">Successfull Password Reset</h2>
           <p className="text-gray-500 mb-6">You can use your new password to login your account</p>
 
-          <button type="submit" className="w-full py-3 bg-[var(--theme-color)] text-white font-Georgia rounded-md hover:bg-white border border-[var(--theme-color)] hover:text-[var(--theme-color)] transition" onClick={() => navigate('/login')} >
+          <button type="submit" className="w-full py-3 bg-[var(--theme-color)] text-white font-Georgia rounded-md hover:bg-white border border-[var(--theme-color)] hover:text-[var(--theme-color)] transition" onClick={handleNavigate} >
             Get Started
           </button>
 

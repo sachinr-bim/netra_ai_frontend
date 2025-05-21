@@ -8,11 +8,20 @@ export const createShopAPI = createAsyncThunk(
   async (shopData, { getState, rejectWithValue }) => {
     try {
       const token = localStorage.getItem('userToken');
-      console.log('token:', token);
+      
+      // Transform the shopData to match the API expected format
+      const requestBody = {
+        name: shopData.name,
+        address: shopData.address, // Assuming location in your UI maps to address in API
+        total_cameras: shopData.total_cameras || 0,
+        total_admin: shopData.total_admin || 0,
+        geo_latitude: shopData.coordinates?.lat || 0,
+        geo_longitude: shopData.coordinates?.lng || 0
+      };
       
       const response = await axios.post(
         "http://52.90.112.216/api/shop/create",
-        shopData,
+        requestBody, // Use the transformed request body
         {
           headers: {
             'Content-Type': 'application/json',
@@ -30,13 +39,113 @@ export const createShopAPI = createAsyncThunk(
   }
 );
 
+export const fetchShopsByTenantAPI = createAsyncThunk(
+  'shops/fetchShopsByTenant',
+  async (_, { rejectWithValue }) => {
+    try {
+      const token = localStorage.getItem('userToken');
+      const response = await axios.get(
+        "http://52.90.112.216/api/shop/getByTenant",
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+          }
+        }
+      );
+      
+      // Return empty array if no shops data
+      console.log(response.data?.shops)
+      return response.data?.shops || [];
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.message || error.message);
+    }
+  }
+);
+
+// Add this to your existing async thunks in shopSlice.js
+export const fetchShopByIdAPI = createAsyncThunk(
+  'shops/fetchShopById',
+  async (shopId, { rejectWithValue }) => {
+    try {
+      const token = localStorage.getItem('userToken');
+      const response = await axios.get(
+        `http://52.90.112.216/api/shop/getById/${shopId}`,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+          }
+        }
+      );
+      return response.data.shop;  // Access the shop object from response
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.message || error.message);
+    }
+  }
+);
+
+export const deleteShopAPI = createAsyncThunk(
+  'shops/deleteShop',
+  async (shopId, { rejectWithValue }) => {
+    try {
+      const token = localStorage.getItem('userToken');
+      const response = await axios.delete(
+        `http://52.90.112.216/api/shop/delete/${shopId}`,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+          }
+        }
+      );
+      return { shopId, message: response.data.message };
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.message || error.message);
+    }
+  }
+);
+
+// Add this to your existing async thunks in shopSlice.js
+export const updateShopAPI = createAsyncThunk(
+  'shops/updateShop',
+  async ({ shopId, shopData }, { getState, rejectWithValue }) => {
+    try {
+      const token = localStorage.getItem('userToken');
+      
+      // Transform the shopData to match the API expected format
+      const requestBody = {
+        name: shopData.name,
+        address: shopData.address,
+        total_cameras: shopData.total_cameras || 0,
+        total_admin: shopData.total_admin || 0,
+        geo_latitude: shopData.coordinates?.lat || 0,
+        geo_longitude: shopData.coordinates?.lng || 0
+      };
+      
+      const response = await axios.put(
+        `http://52.90.112.216/api/shop/update/${shopId}`,
+        requestBody,
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
+          },
+        }
+      );
+      console.log('Update Shop Response:', response.data);
+      return { shopId, updatedShop: response.data.shop };
+    } catch (error) {
+      const errorMessage = error.response?.data?.message || error.message;
+      console.log('Update Shop Error', errorMessage);
+      return rejectWithValue(errorMessage);
+    }
+  }
+);
+
 // Async Thunk with Axios and Token Handling
 export const createShopAdminAPI = createAsyncThunk(
   'shops/createShopAdmin',
   async (adminData, { getState, rejectWithValue }) => {
     try {
       const token = localStorage.getItem('userToken'); // Get token from storage
-      console.log('token:',token)
       
       const response = await axios.post(
         "http://52.90.112.216/api/user/createShopAdmin",
@@ -59,12 +168,39 @@ export const createShopAdminAPI = createAsyncThunk(
   }
 );
 
-export const updateShopAdminAPI = createAsyncThunk(
-  'shops/updateShopAdmin',
-  async ({ id, adminData }, { getState, rejectWithValue }) => {
+export const getShopAdminsAPI = createAsyncThunk(
+  'shops/getShopAdmins',
+  async (tenantId, { getState, rejectWithValue }) => {
     try {
       const token = localStorage.getItem('userToken');
-      console.log('Updating admin with data:', adminData);
+      console.log('token:', token);
+      
+      const response = await axios.get(
+        "http://52.90.112.216/api/user/getShopAdminsByTenant",
+        {
+          params: { id: tenantId },  // Send tenantId as query parameter
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
+          }
+        }
+      );
+      console.log('Admins', response.data)
+      return response.data;
+    } catch (error) {
+      const errorMessage = error.response?.data?.message || error.message;
+      console.log('Tenant Error:', error.response?.data?.message);
+      return rejectWithValue(errorMessage);
+    }
+  }
+);
+
+// Update the existing updateShopAdminAPI or add this if not present
+export const updateShopAdminAPI = createAsyncThunk(
+  'shops/updateShopAdmin',
+  async ({ id, adminData }, { rejectWithValue }) => {
+    try {
+      const token = localStorage.getItem('userToken');
       
       const response = await axios.put(
         `http://52.90.112.216/api/user/updateShopAdmin/${id}`,
@@ -76,192 +212,44 @@ export const updateShopAdminAPI = createAsyncThunk(
           },
         }
       );
-      console.log('Update Admin Response:', response.data);
-      return { id, ...response.data }; // Return both id and updated data
+      
+      return { id, updatedAdmin: response.data }; // Return both id and updated data
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.message || error.message);
+    }
+  }
+);
+
+export const deleteShopAdminAPI = createAsyncThunk(
+  'shops/deleteShopAdmin',
+  async (id, { getState, rejectWithValue }) => {
+    try {
+      const token = localStorage.getItem('userToken');
+      console.log('Deleting admin with id:', id);
+      
+      const response = await axios.delete(
+        `http://52.90.112.216/api/user/deleteShopAdmin/${id}`,
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
+          },
+        }
+      );
+      console.log('Delete Admin Response:', response.data);
+      return id; // Return the id of the deleted admin
     } catch (error) {
       const errorMessage = error.response?.data?.message || error.message;
-      console.log('Update Admin Error', errorMessage);
+      console.log('Delete Admin Error', error.response?.data?.message);
       return rejectWithValue(errorMessage);
     }
   }
 );
 
 const initialState = {
-  shops: [
-    {
-      id: 1,
-      name: "Sailor Shop",
-      image: "https://i.redd.it/the-newly-renovated-sailor-moon-store-in-tokyo-v0-64ti7re36mjd1.jpg?width=4032&format=pjpg&auto=webp&s=bb96249bd51937f15589fbe4e05c43c0e985b0bc",
-      location: "New York, USA",
-      coordinates: { lat: 35.6895, lng: 139.6917 },
-      adminCount: 10,
-      cameras: [
-        {id: 1, deviceModel: 'NVIDIA Jetson AGX Orin', RAM: '2 GB', CPU: '4 Core', SSD: '128 GB', configuration: 'NVIDIA Jetson with 256 CUDA Cores or Equivalent'},
-        {id: 2, deviceModel: 'Sony Camera AGX Orin', RAM: '2 GB', CPU: '4 Core', SSD: '128 GB', configuration: 'Sony Camera with 125 CUDA Cores or Equivalent'}
-    ],
-    },
-    {
-      id: 2,
-      name: "Nike Shop",
-      image: "https://static.nike.com/a/images/f_auto/c8a2ec76-6665-4203-8852-f4ee668aaa7a/image.jpg",
-      location: "Los Angeles, USA",
-      coordinates: { lat: 34.0522, lng: -118.2437 },
-      adminCount: 10,
-      cameras: [
-        {id: 1, deviceModel: 'NVIDIA Jetson AGX Orin', RAM: '2 GB', CPU: '4 Core', SSD: '128 GB', configuration: 'NVIDIA Jetson with 256 CUDA Cores or Equivalent'},
-        {id: 2, deviceModel: 'Sony Camera AGX Orin', RAM: '2 GB', CPU: '4 Core', SSD: '128 GB', configuration: 'Sony Camera with 125 CUDA Cores or Equivalent'}
-    ],
-    },
-    {
-      id: 3,
-      name: "Infinity Shop",
-      image: "https://mokokchungtimes.com/wp-content/uploads/2022/12/infinity-in-mokokchung.jpg",
-      location: "Chicago, USA",
-      coordinates: { lat: 41.8781, lng: -87.6298 },
-      adminCount: 10,
-      cameras: [
-        {id: 1, deviceModel: 'NVIDIA Jetson AGX Orin', RAM: '2 GB', CPU: '4 Core', SSD: '128 GB', configuration: 'NVIDIA Jetson with 256 CUDA Cores or Equivalent'},
-        {id: 2, deviceModel: 'Sony Camera AGX Orin', RAM: '2 GB', CPU: '4 Core', SSD: '128 GB', configuration: 'Sony Camera with 125 CUDA Cores or Equivalent'}
-    ],
-    },
-    {
-      id: 4,
-      name: "Brand Shop",
-      image: "https://media.assettype.com/gulfnews%2Fimport%2F2022%2F07%2F25%2FBRANDS_18234f6ab4c_large.jpg",
-      location: "San Francisco, USA",
-      coordinates: { lat: 37.7749, lng: -122.4194 },
-      adminCount: 10,
-      cameras: [
-        {id: 1, deviceModel: 'NVIDIA Jetson AGX Orin', RAM: '2 GB', CPU: '4 Core', SSD: '128 GB', configuration: 'NVIDIA Jetson with 256 CUDA Cores or Equivalent'},
-        {id: 2, deviceModel: 'Sony Camera AGX Orin', RAM: '2 GB', CPU: '4 Core', SSD: '128 GB', configuration: 'Sony Camera with 125 CUDA Cores or Equivalent'}
-    ],
-    },
-    {
-      id: 5,
-      name: "Sailor Shop",
-      image: "https://i.redd.it/the-newly-renovated-sailor-moon-store-in-tokyo-v0-64ti7re36mjd1.jpg?width=4032&format=pjpg&auto=webp&s=bb96249bd51937f15589fbe4e05c43c0e985b0bc",
-      location: "New York, USA",
-      coordinates: { lat: 35.6895, lng: 139.6917 },
-      adminCount: 10,
-      cameras: [
-        {id: 1, deviceModel: 'NVIDIA Jetson AGX Orin', RAM: '2 GB', CPU: '4 Core', SSD: '128 GB', configuration: 'NVIDIA Jetson with 256 CUDA Cores or Equivalent'},
-        {id: 2, deviceModel: 'Sony Camera AGX Orin', RAM: '2 GB', CPU: '4 Core', SSD: '128 GB', configuration: 'Sony Camera with 125 CUDA Cores or Equivalent'}
-    ],
-    },
-    {
-      id: 6,
-      name: "Nike Shop",
-      image: "https://static.nike.com/a/images/f_auto/c8a2ec76-6665-4203-8852-f4ee668aaa7a/image.jpg",
-      location: "Los Angeles, USA",
-      coordinates: { lat: 34.0522, lng: -118.2437 },
-      adminCount: 10,
-      cameras: [
-        {id: 1, deviceModel: 'NVIDIA Jetson AGX Orin', RAM: '2 GB', CPU: '4 Core', SSD: '128 GB', configuration: 'NVIDIA Jetson with 256 CUDA Cores or Equivalent'},
-        {id: 2, deviceModel: 'Sony Camera AGX Orin', RAM: '2 GB', CPU: '4 Core', SSD: '128 GB', configuration: 'Sony Camera with 125 CUDA Cores or Equivalent'}
-    ],
-    },
-    {
-      id: 7,
-      name: "Infinity Shop",
-      image: "https://mokokchungtimes.com/wp-content/uploads/2022/12/infinity-in-mokokchung.jpg",
-      location: "Chicago, USA",
-      coordinates: { lat: 41.8781, lng: -87.6298 },
-      adminCount: 10,
-      cameras: [
-        {id: 1, deviceModel: 'NVIDIA Jetson AGX Orin', RAM: '2 GB', CPU: '4 Core', SSD: '128 GB', configuration: 'NVIDIA Jetson with 256 CUDA Cores or Equivalent'},
-        {id: 2, deviceModel: 'Sony Camera AGX Orin', RAM: '2 GB', CPU: '4 Core', SSD: '128 GB', configuration: 'Sony Camera with 125 CUDA Cores or Equivalent'}
-    ],
-    },
-    {
-      id: 8,
-      name: "Brand Shop",
-      image: "https://media.assettype.com/gulfnews%2Fimport%2F2022%2F07%2F25%2FBRANDS_18234f6ab4c_large.jpg",
-      location: "San Francisco, USA",
-      coordinates: { lat: 37.7749, lng: -122.4194 },
-      adminCount: 10,
-      cameras: [
-        {id: 1, deviceModel: 'NVIDIA Jetson AGX Orin', RAM: '2 GB', CPU: '4 Core', SSD: '128 GB', configuration: 'NVIDIA Jetson with 256 CUDA Cores or Equivalent'},
-        {id: 2, deviceModel: 'Sony Camera AGX Orin', RAM: '2 GB', CPU: '4 Core', SSD: '128 GB', configuration: 'Sony Camera with 125 CUDA Cores or Equivalent'}
-    ],
-    selectedShop: null
-    },
-  ],
-  
-
-    admins: [
-        {
-          id: 1,
-          name: "John Mark",
-          image: "https://i.pinimg.com/originals/07/33/ba/0733ba760b29378474dea0fdbcb97107.png",
-          location: "Newyork Street, America",
-          shop: 'Nike Shop',
-          email: 'johnmark@gmail.com',
-          phone: '8435644990'
-        },
-        {
-          id: 2,
-          name: "Peter Parker",
-          image: "https://cdn.prod.website-files.com/639ff8596ae419fae300b099/641017314cc67fbb88c517a7_good-linkedin-profile-photo-right-expression-1000x1000.jpeg",
-          location: "Newyork Street, America",
-          shop: 'Sailor Shop',
-          email: 'peterparker@gmail.com',
-          phone: '8824566984'
-        },
-        {
-          id: 3,
-          name: "Rony Mark",
-          image: "https://www.corporatephotographerslondon.com/wp-content/uploads/2022/02/FRA-1699dark-sq.jpg",
-          location: "Newyork Street, America",
-          shop: 'Infinity Shop',
-          email: 'ronymark@gmail.com',
-          phone: '8435644980'
-        },
-        {
-          id: 4,
-          name: "Jack Reacher",
-          image: "https://img-s-msn-com.akamaized.net/tenant/amp/entityid/AA1yduOF.img?w=768&h=384&m=6&x=502&y=93&s=150&d=150",
-          location: "Newyork Street, America",
-          shop: 'Brand Shop',
-          email: 'reacher@gmail.com',
-          phone: '8349127063'
-        },
-        {
-          id: 5,
-          name: "John Mark",
-          image: "https://i.pinimg.com/originals/07/33/ba/0733ba760b29378474dea0fdbcb97107.png",
-          location: "Newyork Street, America",
-          shop: 'Nike Shop',
-          email: 'johnmark@gmail.com',
-          phone: '8435644990'
-        },
-        {
-          id: 6,
-          name: "Peter Parker",
-          image: "https://cdn.prod.website-files.com/639ff8596ae419fae300b099/641017314cc67fbb88c517a7_good-linkedin-profile-photo-right-expression-1000x1000.jpeg",
-          location: "Newyork Street, America",
-          shop: 'Sailor Shop',
-          email: 'peterparker@gmail.com',
-          phone: '8445744990'
-        },
-        {
-          id: 7,
-          name: "Rony Mark",
-          image: "https://www.corporatephotographerslondon.com/wp-content/uploads/2022/02/FRA-1699dark-sq.jpg",
-          location: "Newyork Street, America",
-          shop: 'Infinity Shop',
-          email: 'ronymark@gmail.com',
-          phone: '8435532990'
-        },
-        {
-          id: 8,
-          name: "Jack Reacher",
-          image: "https://img-s-msn-com.akamaized.net/tenant/amp/entityid/AA1yduOF.img?w=768&h=384&m=6&x=502&y=93&s=150&d=150",
-          location: "Newyork Street, America",
-          shop: 'Brand Shop',
-          email: 'reacher@gmail.com',
-          phone: '8435644560'
-        },
-      ]  
+  shops: [],
+  selectedShop: null,
+  admins: []  
 };
 
 const shopsSlice = createSlice({
@@ -297,25 +285,25 @@ const shopsSlice = createSlice({
     extraReducers: (builder) => {
       builder
         .addCase(createShopAdminAPI.pending, (state) => {
-          state.status = 'loading';
-          state.error = null;
-        })
-        .addCase(createShopAdminAPI.fulfilled, (state, action) => {
-          state.status = 'succeeded';
-          state.admins.push({
-            id: action.payload.id || Date.now(),
-            name: action.payload.name,
-            image: action.payload.image || "https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png",
-            location: action.payload.location,
-            shop: action.payload.shop,
-            email: action.payload.email,
-            phone: action.payload.phone,
-          });
-        })
-        .addCase(createShopAdminAPI.rejected, (state, action) => {
-          state.status = 'failed';
-          state.error = action.payload;
-        })
+      state.status = 'loading';
+      state.error = null;
+    })
+    .addCase(createShopAdminAPI.fulfilled, (state, action) => {
+      state.status = 'succeeded';
+      if (action.payload) {
+        state.admins.push({
+          firstname: action.payload.firstname,
+          lastname: action.payload.lastname,
+          email: action.payload.email,
+          phone_number: action.payload.phone_number,
+          password_hash: action.payload.password_hash
+        });
+      }
+    })
+    .addCase(createShopAdminAPI.rejected, (state, action) => {
+      state.status = 'failed';
+      state.error = action.payload;
+    })
 
       .addCase(createShopAPI.pending, (state) => {
         state.status = 'loading';
@@ -327,12 +315,22 @@ const shopsSlice = createSlice({
           id: action.payload.id || Date.now(),
           name: action.payload.name,
           image: action.payload.image || "https://via.placeholder.com/150",
-          location: action.payload.location,
-          coordinates: action.payload.coordinates || { lat: 0, lng: 0 },
-          adminCount: action.payload.adminCount || 0,
-          cameras: action.payload.cameras || [],
+          address: action.payload.address, // Map address back to location
+          coordinates: { 
+            lat: action.payload.geo_latitude || 0, 
+            lng: action.payload.geo_longitude || 0 
+          },
+          total_admin: action.payload.total_admin,
+          total_cameras: Array(action.payload.total_cameras || 0).fill().map((_, i) => ({
+            id: i + 1,
+            deviceModel: 'Unknown Model',
+            RAM: 'Unknown',
+            CPU: 'Unknown',
+            SSD: 'Unknown',
+            configuration: 'Unknown'
+          }))
         });
-      })
+    })
       .addCase(createShopAPI.rejected, (state, action) => {
         state.status = 'failed';
         state.error = action.payload;
@@ -343,18 +341,131 @@ const shopsSlice = createSlice({
     })
     .addCase(updateShopAdminAPI.fulfilled, (state, action) => {
       state.status = 'succeeded';
-      const index = state.admins.findIndex(admin => admin.id === action.payload.id);
+      const index = state.admins.findIndex(admin => admin.user_id === action.payload.id);
       if (index !== -1) {
         state.admins[index] = {
           ...state.admins[index],
-          ...action.payload
+          ...action.payload.updatedAdmin
         };
       }
     })
     .addCase(updateShopAdminAPI.rejected, (state, action) => {
       state.status = 'failed';
       state.error = action.payload;
-    });
+    })
+    .addCase(deleteShopAdminAPI.pending, (state) => {
+      state.status = 'loading';
+      state.error = null;
+    })
+    .addCase(deleteShopAdminAPI.fulfilled, (state, action) => {
+      state.status = 'succeeded';
+      state.admins = state.admins.filter(admin => admin.id !== action.payload);
+    })
+    .addCase(deleteShopAdminAPI.rejected, (state, action) => {
+      state.status = 'failed';
+      state.error = action.payload;
+    })
+    .addCase(fetchShopsByTenantAPI.pending, (state) => {
+        state.status = 'loading';
+        state.error = null;
+      })
+      .addCase(fetchShopsByTenantAPI.fulfilled, (state, action) => {
+        state.status = 'succeeded';
+        state.shops = action.payload.map(shop => ({
+          id: shop.shop_id,
+          name: shop.name,
+          address: shop.address,
+          total_admin: shop.total_admin,
+          total_cameras: shop.total_cameras
+        }));
+      })
+      .addCase(fetchShopsByTenantAPI.rejected, (state, action) => {
+        state.status = 'failed';
+        state.error = action.payload;
+      })
+      .addCase(fetchShopByIdAPI.pending, (state) => {
+      state.status = 'loading';
+      state.error = null;
+    })
+    .addCase(fetchShopByIdAPI.fulfilled, (state, action) => {
+      state.status = 'succeeded';
+      state.selectedShop = {
+        id: action.payload.shop_id,  // Use shop_id from API response
+        name: action.payload.name,
+        address: action.payload.address,
+        total_admin: action.payload.total_admin,
+        total_cameras: action.payload.total_cameras,
+        geo_latitude: action.payload.geo_latitude,
+        geo_longitude: action.payload.geo_longitude,
+        // Add any other fields you need
+      };
+    })
+    .addCase(fetchShopByIdAPI.rejected, (state, action) => {
+      state.status = 'failed';
+      state.error = action.payload;
+    })
+      .addCase(deleteShopAPI.pending, (state) => {
+        state.status = 'loading';
+        state.error = null;
+      })
+      .addCase(deleteShopAPI.fulfilled, (state, action) => {
+        state.status = 'succeeded';
+        state.shops = state.shops.filter(shop => shop.id !== action.payload.shopId);
+      })
+      .addCase(deleteShopAPI.rejected, (state, action) => {
+        state.status = 'failed';
+        state.error = action.payload;
+      })
+      // Get Shop Admins API
+      .addCase(getShopAdminsAPI.pending, (state) => {
+      state.adminsStatus = 'loading';
+      state.adminsError = null;
+    })
+    .addCase(getShopAdminsAPI.fulfilled, (state, action) => {
+      state.adminsStatus = 'succeeded';
+      state.admins = action.payload.map(admin => ({
+        user_id: admin.user_id,
+        tenant_id: admin.tenant_id,
+        firstname: admin.userDetails.firstname,
+        lastname: admin.userDetails.lastname,
+        email: admin.userDetails.email,
+        phone_number: admin.userDetails.phone_number,
+        role_id: admin.userDetails.role_id,
+        status: admin.userDetails.status,
+        createdAt: admin.createdAt,
+        updatedAt: admin.updatedAt,
+        // Add other fields as needed
+      }));
+    })
+    .addCase(getShopAdminsAPI.rejected, (state, action) => {
+      state.adminsStatus = 'failed';
+      state.adminsError = action.payload;
+    })
+      // Update Shop API
+      .addCase(updateShopAPI.pending, (state) => {
+        state.status = 'loading';
+        state.error = null;
+      })
+      .addCase(updateShopAPI.fulfilled, (state, action) => {
+        state.status = 'succeeded';
+        const index = state.shops.findIndex(shop => shop.id === action.payload.shopId);
+        if (index !== -1) {
+          state.shops[index] = {
+            ...state.shops[index],
+            ...action.payload.updatedShop
+          };
+        }
+        if (state.selectedShop && state.selectedShop.id === action.payload.shopId) {
+          state.selectedShop = {
+            ...state.selectedShop,
+            ...action.payload.updatedShop
+          };
+        }
+      })
+      .addCase(updateShopAPI.rejected, (state, action) => {
+        state.status = 'failed';
+        state.error = action.payload;
+      })
     },
 });
 

@@ -1,108 +1,145 @@
-// React
-import React, { useState,useEffect } from "react";
-
-// Redux
-import { useSelector,useDispatch } from "react-redux";
-import { selectShop } from "../../../reduxToolkit/slices/shopSlice";
-
-// Packages and Libraries
+import React, { useState, useEffect } from "react";
+import { useSelector, useDispatch } from "react-redux";
 import { useParams } from "react-router-dom";
+import { fetchShopByIdAPI } from "../../../reduxToolkit/slices/shopSlice";
 
 // Components
 import ShopDetailsMenu from "./ShopDetailsMenu/ShopDetailsMenu";
 import Overview from "./ShopDetailsMenu/Overview";
-import EdgeDevice from "../ShopDetails/ShopDetailsMenu/EdgeDevice/EdgeDevice";
-import AddCamera from "./ShopDetailsMenu/AddCamera";
+import EdgeDevice from "./ShopDetailsMenu/EdgeDevice/EdgeDevice";
+import Camera from './ShopDetailsMenu/Camera/Camera'
+import AddCamera from "./ShopDetailsMenu/Camera/AddCamera";
 import ShopCurrentPlan from "./ShopDetailsMenu/CurrentPlan/ShopCurrentPlan";
 import DeleteShop from "./ShopDetailsMenu/DeleteShop";
 import ShopMapView from "../ShopMapView";
+import ShopAdmin from "./ShopDetailsMenu/ShopAdmin/ShopAdmin";
+import ShopAnomaly from "./ShopDetailsMenu/ShopAnomaly/ShopAnomaly"
 
-// Images
-import MapPreview from '../../../assets/images/map.png'
+// Icons and Images
+import { LocationIcon } from "../../../assets/icons/LocationIcon";
+import MapPreview from '../../../assets/images/map.png';
 
 const ShopDetails = () => {
-
   const { id } = useParams();
   const dispatch = useDispatch();
-  const selectedShop = useSelector((state) => state.shops.selectedShop);
-  const shops = useSelector((state) => state.shops.shops)
+  const { selectedShop, status, error } = useSelector((state) => state.shops);
+  const [activeTab, setActiveTab] = useState('overview');
+  const [isMapOpen, setIsMapOpen] = useState(false);
 
-  const [activeTab,setActiveTab] = useState('overview')
-  const [isMapOpen, setIsMapOpen] = useState(false)
-
-  // If the selectedShop isn't set or doesn't match the URL, find it
   useEffect(() => {
-    if (!selectedShop || selectedShop.id !== parseInt(id)) {
-      const shop = shops.find(shop => shop.id === parseInt(id));
-      if (shop) {
-        dispatch(selectShop(shop));
-      }
+    if (id) {
+      dispatch(fetchShopByIdAPI(id));
     }
-  }, [id, shops, selectedShop, dispatch]);
+  }, [id, dispatch]);
 
   const handleMapOpen = () => {
-    setIsMapOpen(true)
-  }
+    setIsMapOpen(true);
+  };
 
   const renderMenuContent = () => {
     switch(activeTab) {
       case 'overview':
         return <Overview selectedShop={selectedShop} />;
       case 'edgeDevice':
-        return <EdgeDevice selectedShop={selectedShop} />  
+        return <EdgeDevice selectedShop={selectedShop} shopId={selectedShop.id} />;
+      case 'cameraDetails':
+        return <Camera selectedShop={selectedShop} />  
       case 'addCameraDetails':
-        return <AddCamera />;
+        return <AddCamera id={selectedShop.id} />;
+      case 'shopAnomalies':
+        return <ShopAnomaly id={selectedShop.id} />;  
       case 'subscription':
-        return <ShopCurrentPlan />;
+        return <ShopCurrentPlan shopId={id} />;
+      case 'shopAdmin':
+        return <ShopAdmin />
       case 'deleteShop':
-        return <DeleteShop selectedShop={selectedShop} />    
+        return <DeleteShop selectedShop={selectedShop} setActiveTab={setActiveTab} id={selectedShop.id} />;
       default:
         return <Overview selectedShop={selectedShop} />;
     }
   };
-  
+
+  if (status === 'loading') {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[var(--theme-color)]"></div>
+      </div>
+    );
+  }
+
+  if (status === 'failed') {
+    return (
+      <div className="bg-white p-4 rounded-xl text-red-500 text-center mt-8">
+        Error: {error || 'Failed to load shop details'}
+      </div>
+    );
+  }
+
+  if (!selectedShop) {
+    return (
+      <div className="bg-white p-4 rounded-xl text-center mt-8">
+        Shop not found
+      </div>
+    );
+  }
+
   return (
     <div className="p-4 md:p-8 bg-gray-100 min-h-screen">
-
-    {isMapOpen && <ShopMapView onClose={() => setIsMapOpen(false)} shops={shops} />}
+      {isMapOpen && (
+        <ShopMapView 
+          onClose={() => setIsMapOpen(false)} 
+          shops={[selectedShop]} 
+          initialCenter={{
+            lat: selectedShop.geo_latitude || 0,
+            lng: selectedShop.geo_longitude || 0
+          }}
+        />
+      )}
 
       <div className="flex flex-col lg:flex-row gap-6 mb-6">
-        
+        {/* Shop Info Section */}
         <div className="relative rounded-lg overflow-hidden flex-4 min-h-80">
-          {/* Shop Background Image */}
           <img
-            src={selectedShop.image ? selectedShop.image : "https://cdn-icons-png.freepik.com/256/869/869636.png?semt=ais_hybrid"}
+            src="https://static.nike.com/a/images/f_auto/c8a2ec76-6665-4203-8852-f4ee668aaa7a/image.jpg"
             alt="Shop"
             className="w-full h-60 object-cover"
+            onError={(e) => {
+              e.target.src = "https://cdn-icons-png.freepik.com/256/869/869636.png?semt=ais_hybrid";
+              e.target.className = "w-full h-60 object-contain p-4 bg-gray-100";
+            }}
           />
           
-          {/* Overlay Card */}
           <div className="absolute bottom-0 left-0 right-0 bg-white bg-opacity-90 backdrop-blur-sm p-4 md:p-6 rounded-t-lg">
-            <div className="flex flex-col md:flex-row justify-between">
+            <div className="flex flex-col md:flex-row justify-between gap-4">
               <div>
                 <h2 className="text-xl md:text-2xl font-bold">{selectedShop.name}</h2>
-                <p className="text-gray-600">Modern & stylish clothes for you</p>
+                <p className="text-gray-600 line-clamp-1">{selectedShop.address}</p>
               </div>
-              <div className="flex flex-wrap gap-2 md:gap-4 text-sm md:text-base text-[var(--theme-color)] mt-2 md:mt-0">
-                <p>Location: {selectedShop.location}</p>
-                <p>Shop Admin: {selectedShop.adminCount} members</p>
-                <p>Total Cameras: {selectedShop.cameras.length}</p>
+              <div className="flex flex-col gap-1 text-sm md:text-base">
+                <p className="text-[var(--theme-color)] flex items-center gap-1">
+                  <LocationIcon size={16} width="1em" />
+                  <span className="line-clamp-1">{selectedShop.address}</span>
+                </p>
+                
               </div>
             </div>
           </div>
         </div>
 
-        {/* Map Section (now right side) */}
+        {/* Map Section */}
         <div className="bg-white rounded-lg p-4 flex-1">
-          <h2 className="text-4xl font-bold mb-2 ">{selectedShop.name} Map</h2>
+          <h2 className="text-xl md:text-2xl font-bold mb-2">{selectedShop.name} Location</h2>
           <div className="flex flex-col h-60">
             <img
               src={MapPreview}
               alt="Map"
-              className="w-75 h-48 md:h-full object-cover rounded-lg flex-1 "
+              className="w-full h-48 md:h-full object-cover rounded-lg flex-1"
             />
-            <div className="flex justify-center">
-              <button className="bg-[var(--theme-color)] hover:bg-white border border-[var(--theme-color)] text-white hover:text-[var(--theme-color)] px-6 py-2 rounded-lg transition-colors" onClick={handleMapOpen}>
+            <div className="flex justify-center mt-2">
+              <button 
+                className="bg-[var(--theme-color)] hover:bg-white border border-[var(--theme-color)] text-white hover:text-[var(--theme-color)] px-6 py-2 rounded-lg transition-colors"
+                onClick={handleMapOpen}
+              >
                 View Map in Full Screen
               </button>
             </div>
@@ -110,13 +147,17 @@ const ShopDetails = () => {
         </div>
       </div>
 
-      {/* Shop Details With Menu */}
+      {/* Shop Details Content */}
       <div className="bg-white rounded-lg p-4 md:flex">
+        <ShopDetailsMenu 
+          activeTab={activeTab} 
+          setActiveTab={setActiveTab} 
+          shopId={id}
+        />
         
-        <ShopDetailsMenu activeTab={activeTab} setActiveTab={setActiveTab} />
-
-        {renderMenuContent()}
-        
+        <div className="flex-1 p-4">
+          {renderMenuContent()}
+        </div>
       </div>
     </div>
   );

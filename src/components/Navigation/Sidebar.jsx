@@ -1,3 +1,10 @@
+import { useEffect } from "react";
+
+// Redux
+import { useSelector,useDispatch } from "react-redux";
+import { getCurrentUser } from "../../reduxToolkit/slices/authSlice";
+
+// Packages and Libraries
 import { Link, useLocation } from "react-router-dom";
 
 // Icons
@@ -7,9 +14,16 @@ import LogoutIcon from "../../assets/icons/LogoutIcon";
 // Images
 import netraIcon from '../../assets/images/netraIcon.png'
 
-
 export default function Sidebar({ sideBarContent, onContentChange, handleLogout }) {
+    
+    const dispatch = useDispatch()
     const Location = useLocation();
+
+    const { userInfo } = useSelector((state) => state.auth)
+
+    useEffect(() => {
+    dispatch(getCurrentUser());
+  }, [dispatch]);
 
     return (
         <div className="w-75 bg-white text-gray-800 p-4 min-h-screen">
@@ -23,13 +37,13 @@ export default function Sidebar({ sideBarContent, onContentChange, handleLogout 
             {/* Profile Section */}
             <div className="flex flex-col items-center mt-6">
                 <div className="relative">
-                    <img src="https://images2.alphacoders.com/156/thumb-1920-156022.jpg" alt="Profile" className="w-30 h-30 p-2 rounded-full border-4 border-orange-200" />
+                    <img src={userInfo?.profile_picture || "https://images2.alphacoders.com/156/thumb-1920-156022.jpg"} alt="Profile" className="w-30 h-30 p-2 rounded-full border-4 border-orange-200" />
                     <button className="absolute top-1 right-1 bg-[var(--theme-color)] text-white p-1 rounded-full text-xs">
                         <EditIcon size={15} height="1em" width="1em" />
                     </button>
                 </div>
-                <h2 className="text-2xl font-semibold mt-2">Mr. Kinley</h2>
-                <p className="text-gray-500 text-sm">Shopowner of Newyork</p>
+                <h2 className="text-2xl font-semibold mt-2">Mr. {userInfo.lastname}</h2>
+                <p className="text-gray-500 text-sm">{userInfo.location ? `Shopowner of ${userInfo.location}` : 'No Bio Available'}</p>
             </div>
 
             <ul className="mt-6">

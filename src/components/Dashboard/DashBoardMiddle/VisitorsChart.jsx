@@ -1,9 +1,78 @@
-import React from 'react'
-
-// Packages and Libraries
+// VisitorsChart.js
+import React, { useEffect } from 'react';
+import { useSelector, useDispatch } from 'react-redux';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend } from "recharts";
+import { fetchVisitorsByGender, setDateRange } from '../../../reduxToolkit/slices/visitorsSlice';
+import { fetchShopsByTenantAPI } from '../../../reduxToolkit/slices/shopSlice';
 
-export default function VisitorsChart({ visitorsDateRange, setVisitorsDateRange, visitorsData, renderCustomizedLegend, COLORS }) {
+const renderCustomizedLegend = (props) => {
+  const { payload } = props;
+  return (
+    <div className="flex justify-center gap-4 mt-4">
+      {payload.map((entry, index) => (
+        <div key={`item-${index}`} className="flex items-center">
+          <div
+            className="w-3 h-3 mr-1"
+            style={{ backgroundColor: entry.color }}
+          />
+          <span className="text-xs">{entry.value}</span>
+        </div>
+      ))}
+    </div>
+  );
+};
+
+export default function VisitorsChart({ COLORS }) {
+  const dispatch = useDispatch();
+  const { shops, loading: shopsLoading } = useSelector((state) => state.shops);
+  const { 
+    visitorsByGender, 
+    loading, 
+    error,
+    dateRange 
+  } = useSelector((state) => state.visitor);
+
+  useEffect(() => {
+    dispatch(fetchShopsByTenantAPI());
+  }, [dispatch]);
+
+  useEffect(() => {
+    if (shops && shops.length > 0) {
+      shops.forEach(shop => {
+        dispatch(fetchVisitorsByGender({ 
+          shopId: shop.id, 
+          startDate: dateRange.startDate, 
+          endDate: dateRange.endDate 
+        }));
+      });
+    }
+  }, [dispatch, dateRange, shops]);
+
+  const handleDateChange = (e) => {
+    const { name, value } = e.target;
+    dispatch(setDateRange({ ...dateRange, [name]: value }));
+  };
+
+  // Transform data for chart using actual shop data
+  const chartData = shops?.map(shop => {
+    const shopData = visitorsByGender[shop.id] || { male: 0, female: 0 };
+    return {
+      name: shop.name || `Shop ${shop.id}`,
+      male: shopData.male || 0,
+      female: shopData.female || 0
+    };
+  }) || [];
+
+  if (shopsLoading) {
+    return (
+      <div className="bg-gray-50 p-4 rounded-lg">
+        <div className="h-[300px] flex items-center justify-center">
+          <p className="text-gray-500">Loading shops data...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="bg-gray-50 p-4 rounded-lg">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
@@ -15,29 +84,38 @@ export default function VisitorsChart({ visitorsDateRange, setVisitorsDateRange,
             <label className="block text-xs font-medium text-gray-700 mb-1">Start Date</label>
             <input
               type="date"
+              name="startDate"
+              value={dateRange.startDate}
+              onChange={handleDateChange}
               className="text-sm border border-gray-300 rounded-md px-3 py-2"
-              value={visitorsDateRange.start.toISOString().split('T')[0]}
-              onChange={(e) => setVisitorsDateRange(prev => ({ ...prev, start: new Date(e.target.value) }))}
             />
           </div>
           <div>
             <label className="block text-xs font-medium text-gray-700 mb-1">End Date</label>
             <input
               type="date"
+              name="endDate"
+              value={dateRange.endDate}
+              onChange={handleDateChange}
               className="text-sm border border-gray-300 rounded-md px-3 py-2"
-              value={visitorsDateRange.end.toISOString().split('T')[0]}
-              onChange={(e) => setVisitorsDateRange(prev => ({ ...prev, end: new Date(e.target.value) }))}
             />
           </div>
         </div>
       </div>
 
-      {/* Chart */}
       <div className="h-[300px]">
-        {visitorsData && visitorsData.length > 0 ? (
+        {loading ? (
+          <div className="h-full flex items-center justify-center">
+            <p className="text-gray-500">Loading visitor data...</p>
+          </div>
+        ) : error ? (
+          <div className="h-full flex items-center justify-center">
+            <p className="text-red-500">Error: {error}</p>
+          </div>
+        ) : chartData.length > 0 ? (
           <ResponsiveContainer width="100%" height="100%">
             <BarChart
-              data={visitorsData}
+              data={chartData}
               margin={{ top: 20, right: 20, left: 20, bottom: 40 }}
               barSize={30}
               barGap={2}
@@ -91,5 +169,5 @@ export default function VisitorsChart({ visitorsDateRange, setVisitorsDateRange,
         )}
       </div>
     </div>
-  )
+  );
 }

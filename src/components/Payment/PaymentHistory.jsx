@@ -1,15 +1,17 @@
-import { useState } from "react";
-
-// Redux
-import { useSelector } from "react-redux";
+import { useState, useEffect } from "react";
+import { useSelector, useDispatch } from "react-redux";
+import { fetchPayments } from "../../reduxToolkit/slices/paymentSlice";
 
 // Components
 import PaymentFilters from "./PaymentFilters";
 import PaymentTable from "./PaymentTable";
 import PaymentSearch from "./PaymentSearch";
 
+
 export default function PaymentHistory() {
-  const { payments } = useSelector(state => state.payments);
+  const dispatch = useDispatch();
+
+  const { payments, status, error } = useSelector( (state) => state.payments)
   
   const [searchTerm, setSearchTerm] = useState("");
   const [showFilters, setShowFilters] = useState(false);
@@ -17,6 +19,14 @@ export default function PaymentHistory() {
     startDate: "",
     endDate: ""
   });
+
+  console.log("Payments:", payments)
+
+  useEffect(() => {
+    if (status === "idle") {
+      dispatch(fetchPayments());
+    }
+  }, [status, dispatch]);
 
   const hasActiveFilters = searchTerm || dateFilter.startDate || dateFilter.endDate;
 
@@ -27,8 +37,8 @@ export default function PaymentHistory() {
       );
     
     const matchesDateRange = (
-      (!dateFilter.startDate || new Date(payment.date) >= new Date(dateFilter.startDate)) &&
-      (!dateFilter.endDate || new Date(payment.date) <= new Date(dateFilter.endDate))
+      (!dateFilter.startDate || new Date(payment.createdAt) >= new Date(dateFilter.startDate)) &&
+      (!dateFilter.endDate || new Date(payment.createdAt) <= new Date(dateFilter.endDate))
     );
       
     return matchesSearch && matchesDateRange;
@@ -38,6 +48,20 @@ export default function PaymentHistory() {
     setSearchTerm("");
     setDateFilter({ startDate: "", endDate: "" });
   };
+
+  if (status === "loading") {
+    return (<div className="flex justify-center items-center h-64">
+              <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[var(--theme-color)]"></div>
+            </div>)
+  }
+
+  if (status === "failed") {
+    return (
+      <div className="bg-white p-4 rounded-xl text-red-500">
+        Error: {error}
+      </div>
+    )
+  }
 
   return (
     <div className="bg-gray-100 p-4 md:p-6">
@@ -56,15 +80,18 @@ export default function PaymentHistory() {
       <div className="bg-white mb-4 md:mb-6 p-4 md:p-6 rounded-md">
         <PaymentSearch searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
         
-
         {/* Date Filters Section */}
-        <PaymentFilters hasActiveFilters={hasActiveFilters} clearFilters={clearFilters} showFilters={showFilters} dateFilter={dateFilter} setDateFilter={setDateFilter} />
-        
+        <PaymentFilters 
+          hasActiveFilters={hasActiveFilters} 
+          clearFilters={clearFilters} 
+          showFilters={showFilters} 
+          dateFilter={dateFilter} 
+          setDateFilter={setDateFilter} 
+        />
       </div>
 
       {/* Payment Table */}
       <PaymentTable filteredPayments={filteredPayments} />
-      
     </div>
   );
 }

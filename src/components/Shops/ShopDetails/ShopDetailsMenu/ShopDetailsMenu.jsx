@@ -1,11 +1,11 @@
-import React from 'react';
-
 export default function ShopDetailsMenu({ activeTab, setActiveTab }) {
   const menuItems = [
     { id: 'overview', name: 'Overview' },
     { id: 'edgeDevice', name: 'Edge Device Details' },
-    { id: 'addCameraDetails', name: 'Add Camera Details'},
+    { id: 'cameraDetails', name: 'Camera Details' },
+    { id: 'shopAnomalies', name: 'Anomaly List' },
     { id: 'subscription', name: 'Subscription' },
+    { id: 'shopAdmin', name: 'Shop Admin' },
     { id: 'deleteShop', name: 'Delete Shop' }
   ];
 

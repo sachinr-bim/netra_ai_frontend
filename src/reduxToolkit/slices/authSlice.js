@@ -37,12 +37,39 @@ export const loginUser = createAsyncThunk(
       // Store token in localStorage
       if (response.data.token) {
         localStorage.setItem('userToken', response.data.token);
+        localStorage.setItem('userInfo',response.data.user)
       }
+      console.log('User Info Login',response.data.user)
 
       console.log('Login API data:', response.data)
+      
       return response.data;
     } catch (error) {
       // Return custom error message from API if any
+      if (error.response && error.response.data.message) {
+        return rejectWithValue(error.response.data.message);
+      } else {
+        return rejectWithValue(error.message);
+      }
+    }
+  }
+);
+
+export const getCurrentUser = createAsyncThunk(
+  'user/getCurrentUser',
+  async (_, { rejectWithValue }) => {
+    try {
+      const token = localStorage.getItem('userToken');
+      const response = await axios.get(
+        "http://52.90.112.216/api/user/me",
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+          },
+        }
+      );
+      return response.data.user;
+    } catch (error) {
       if (error.response && error.response.data.message) {
         return rejectWithValue(error.response.data.message);
       } else {
@@ -123,14 +150,68 @@ export const resetPassword = createAsyncThunk(
   }
 );
 
+// Add this to your existing authSlice.js
+export const deleteTenant = createAsyncThunk(
+  'auth/deleteTenant',
+  async (email, { rejectWithValue }) => {
+    try {
+      const token = localStorage.getItem('userToken');
+      const response = await axios.post(
+        'http://52.90.112.216/api/user/deleteTenant',
+        { email },
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+          },
+        }
+      );
+      return response.data;
+    } catch (error) {
+      if (error.response && error.response.data.message) {
+        return rejectWithValue(error.response.data.message);
+      } else {
+        return rejectWithValue(error.message);
+      }
+    }
+  }
+);
+
+// Add this to your existing authSlice.js
+export const updateTenant = createAsyncThunk(
+  'auth/updateTenant',
+  async (userData, { rejectWithValue }) => {
+    try {
+      const token = localStorage.getItem('userToken');
+      const response = await axios.post(
+        'http://52.90.112.216/api/user/updateTenant',
+        userData,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+          },
+        }
+      );
+      return response.data;
+    } catch (error) {
+      if (error.response && error.response.data.message) {
+        return rejectWithValue(error.response.data.message);
+      } else {
+        return rejectWithValue(error.message);
+      }
+    }
+  }
+);
+
 // Check localStorage for existing token
 const userToken = localStorage.getItem('userToken') 
   ? localStorage.getItem('userToken') 
   : null;
 
+const userInfo = localStorage.getItem('userInfo') ? localStorage.getItem('userInfo') : null;   
+
 const initialState = {
   loading: false,
-  userInfo: null, // for user object
+  userInfo, // for user object
   userToken, // for storing the JWT
   error: null,
   success: false, // for monitoring the registration process.
@@ -141,7 +222,7 @@ const authSlice = createSlice({
   initialState,
   reducers: {
     logout: (state) => {
-      localStorage.removeItem('userToken'); // delete token from storage
+      localStorage.clear() // delete token from storage
       state.loading = false;
       state.userInfo = null;
       state.userToken = null;
@@ -164,6 +245,8 @@ const authSlice = createSlice({
       state.loading = false;
       state.userInfo = payload.user;
       state.userToken = payload.token;
+
+      localStorage.setItem('userInfo', JSON.stringify(payload.user));
     });
     builder.addCase(loginUser.rejected, (state, { payload }) => {
       state.loading = false;
@@ -222,6 +305,52 @@ const authSlice = createSlice({
       state.success = true;
     })
     builder.addCase(resetPassword.rejected, (state, { payload }) => {
+      state.loading = false;
+      state.error = payload;
+    })
+    //Current user info API
+    builder.addCase(getCurrentUser.pending, (state) => {
+      state.loading = true;
+      state.error = null;
+    });
+    builder.addCase(getCurrentUser.fulfilled, (state, { payload }) => {
+      state.loading = false;
+      state.userInfo = payload;
+      localStorage.setItem('userInfo', JSON.stringify(payload));
+    });
+    builder.addCase(getCurrentUser.rejected, (state, { payload }) => {
+      state.loading = false;
+      state.error = payload;
+    })
+    // Delete Account
+    builder.addCase(deleteTenant.pending, (state) => {
+      state.loading = true;
+      state.error = null;
+    });
+    builder.addCase(deleteTenant.fulfilled, (state) => {
+      state.loading = false;
+      state.success = true;
+      // Clear user data after successful deletion
+      state.userInfo = null;
+      state.userToken = null;
+      localStorage.clear();
+    });
+    builder.addCase(deleteTenant.rejected, (state, { payload }) => {
+      state.loading = false;
+      state.error = payload;
+    })
+    // Update Tenant
+    builder.addCase(updateTenant.pending, (state) => {
+      state.loading = true;
+      state.error = null;
+    });
+    builder.addCase(updateTenant.fulfilled, (state, { payload }) => {
+      state.loading = false;
+      state.success = true;
+      state.userInfo = payload.user; // Update user info in state
+      localStorage.setItem('userInfo', JSON.stringify(payload.user)); // Update localStorage
+    });
+    builder.addCase(updateTenant.rejected, (state, { payload }) => {
       state.loading = false;
       state.error = payload;
     });

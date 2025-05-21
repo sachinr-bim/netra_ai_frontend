@@ -54,7 +54,7 @@ export default function Signup() {
       });
   };
 
-  const navigateToLogin = () => navigate("/login");
+  const navigateToLogin = () => navigate("/subscription");
 
   return (
       <div className="flex bg-white min-h-screen">
