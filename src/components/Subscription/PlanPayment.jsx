@@ -50,7 +50,7 @@ export default function PlanPayment({ isOpen, onClose, plan, isYearly }) {
       plan_id: plan.id,
       tenant_id: userInfo.tenant_id,
       transaction_id: transactionId,
-
+      shop_id:1
     };
 
     console.log("Subscription Data", subscriptionData)

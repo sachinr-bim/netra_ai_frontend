@@ -1,8 +1,11 @@
-// VisitorsChart.js
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend } from "recharts";
-import { fetchVisitorsByGender, setDateRange } from '../../../reduxToolkit/slices/visitorsSlice';
+import { 
+  fetchVisitorsByGender, 
+  fetchVisitorsByDateRange,
+  setDateRange 
+} from '../../../reduxToolkit/slices/visitorsSlice';
 import { fetchShopsByTenantAPI } from '../../../reduxToolkit/slices/shopSlice';
 
 const renderCustomizedLegend = (props) => {
@@ -27,58 +30,94 @@ export default function VisitorsChart({ COLORS }) {
   const { shops, loading: shopsLoading } = useSelector((state) => state.shops);
   const { 
     visitorsByGender, 
+    visitorsByDateRange,
     loading, 
+    dateRangeLoading,
     error,
     dateRange 
   } = useSelector((state) => state.visitor);
+  
+  const [isFiltered, setIsFiltered] = useState(false);
 
+  // Initialize with empty dates
+  const getDefaultDates = () => {
+    return {
+      startDate: '',
+      endDate: ''
+    };
+  };
+
+  // Load shops data
   useEffect(() => {
     dispatch(fetchShopsByTenantAPI());
   }, [dispatch]);
 
+  // Load default visitor data when shops are loaded and not filtered
   useEffect(() => {
-    if (shops && shops.length > 0) {
+    if (shops && shops.length > 0 && !isFiltered) {
       shops.forEach(shop => {
         dispatch(fetchVisitorsByGender({ 
-          shopId: shop.id, 
-          startDate: dateRange.startDate, 
-          endDate: dateRange.endDate 
+          shopId: shop.id
         }));
       });
     }
-  }, [dispatch, dateRange, shops]);
+  }, [dispatch, shops, isFiltered]);
 
+  // Handle date range changes
   const handleDateChange = (e) => {
     const { name, value } = e.target;
-    dispatch(setDateRange({ ...dateRange, [name]: value }));
+    const newDateRange = { ...dateRange, [name]: value };
+    dispatch(setDateRange(newDateRange));
+    
+    // Only apply filter if both dates are selected
+    if (newDateRange.startDate && newDateRange.endDate) {
+      applyDateFilter(newDateRange);
+    } else {
+      // If either date is cleared, reset to default view
+      resetFilters();
+    }
   };
 
-  // Transform data for chart using actual shop data
+  // Apply date filter to all shops
+  const applyDateFilter = (range) => {
+    if (shops && shops.length > 0 && range.startDate && range.endDate) {
+      setIsFiltered(true);
+      shops.forEach(shop => {
+        dispatch(fetchVisitorsByDateRange({ 
+          shopId: shop.id,
+          startDate: range.startDate,
+          endDate: range.endDate
+        }));
+      });
+    }
+  };
+
+  // Reset to default view with empty dates
+  const resetFilters = () => {
+    setIsFiltered(false);
+    dispatch(setDateRange(getDefaultDates()));
+  };
+
+  // Prepare chart data based on whether we're showing filtered or default data
   const chartData = shops?.map(shop => {
-    const shopData = visitorsByGender[shop.id] || { male: 0, female: 0 };
+    const sourceData = isFiltered ? visitorsByDateRange[shop.id] : visitorsByGender[shop.id];
+    
     return {
       name: shop.name || `Shop ${shop.id}`,
-      male: shopData.male || 0,
-      female: shopData.female || 0
+      male: sourceData?.male || 0,
+      female: sourceData?.female || 0,
+      total: (sourceData?.male || 0) + (sourceData?.female || 0)
     };
   }) || [];
 
-  if (shopsLoading) {
-    return (
-      <div className="bg-gray-50 p-4 rounded-lg">
-        <div className="h-[300px] flex items-center justify-center">
-          <p className="text-gray-500">Loading shops data...</p>
-        </div>
-      </div>
-    );
-  }
+  const isLoading = loading || dateRangeLoading || shopsLoading;
+  const showResetButton = isFiltered || dateRange.startDate || dateRange.endDate;
 
   return (
     <div className="bg-gray-50 p-4 rounded-lg">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
         <h3 className="text-lg font-bold text-gray-800">Visitors by Gender</h3>
 
-        {/* Date Range Inputs */}
         <div className="flex flex-wrap sm:flex-nowrap items-end gap-4 w-full sm:w-auto">
           <div>
             <label className="block text-xs font-medium text-gray-700 mb-1">Start Date</label>
@@ -87,7 +126,8 @@ export default function VisitorsChart({ COLORS }) {
               name="startDate"
               value={dateRange.startDate}
               onChange={handleDateChange}
-              className="text-sm border border-gray-300 rounded-md px-3 py-2"
+              max={dateRange.endDate || new Date().toISOString().split('T')[0]}
+              className="text-sm border border-gray-300 rounded-md px-3 py-2 w-full"
             />
           </div>
           <div>
@@ -97,14 +137,24 @@ export default function VisitorsChart({ COLORS }) {
               name="endDate"
               value={dateRange.endDate}
               onChange={handleDateChange}
-              className="text-sm border border-gray-300 rounded-md px-3 py-2"
+              min={dateRange.startDate}
+              max={new Date().toISOString().split('T')[0]}
+              className="text-sm border border-gray-300 rounded-md px-3 py-2 w-full"
             />
           </div>
+          {showResetButton && (
+            <button 
+              onClick={resetFilters}
+              className="text-sm bg-gray-200 hover:bg-gray-300 px-3 py-2 rounded-md transition-colors whitespace-nowrap"
+            >
+              Clear Dates
+            </button>
+          )}
         </div>
       </div>
 
       <div className="h-[300px]">
-        {loading ? (
+        {isLoading ? (
           <div className="h-full flex items-center justify-center">
             <p className="text-gray-500">Loading visitor data...</p>
           </div>

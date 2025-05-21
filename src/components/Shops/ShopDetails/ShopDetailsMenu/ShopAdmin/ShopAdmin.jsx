@@ -1,13 +1,12 @@
 import { useState, useRef, useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { deleteShopAdminAPI, getShopAdminsAPI } from "../../../../../reduxToolkit/slices/shopSlice";
-import { getCurrentUser } from "../../../../../reduxToolkit/slices/authSlice";
 import Swal from "sweetalert2";
 import { LocationIcon } from "../../../../../assets/icons/LocationIcon";
 import AddAdmin from "./AddAdmin";
 import EditAdmin from "./EditAdmin";
 
-export default function ShopAdmin() {
+export default function ShopAdmin({shopId}) {
     const dispatch = useDispatch();
     const { admins, adminsStatus, adminsError } = useSelector((state) => state.shops);
     const { userInfo } = useSelector((state) => state.auth);
@@ -20,11 +19,8 @@ export default function ShopAdmin() {
     const tenantId = userInfo?.tenant_id;
 
     useEffect(() => {
-        if (tenantId) {
-            dispatch(getShopAdminsAPI(tenantId));
-        }
-        dispatch(getCurrentUser());
-    }, [dispatch, tenantId]);
+        dispatch(getShopAdminsAPI(shopId));
+    }, [dispatch,shopId]);
 
     const handleAddOpen = () => setIsAddOpen(!isAddOpen);
 
@@ -109,7 +105,7 @@ export default function ShopAdmin() {
     return (
         <div className="bg-white">
             {/* Add Admin Modal */}
-            <AddAdmin isOpen={isAddOpen} onClose={handleAddOpen} tenantId={tenantId} />
+            <AddAdmin isOpen={isAddOpen} onClose={handleAddOpen} shopId={shopId} />
             
             {/* Edit Admin Modal */}
             {editingAdmin && (
@@ -117,7 +113,7 @@ export default function ShopAdmin() {
                     isOpen={!!editingAdmin} 
                     onClose={handleClose} 
                     adminData={editingAdmin}
-                    tenantId={tenantId}
+                    shopId={shopId}
                 />
             )}
 
@@ -158,7 +154,7 @@ export default function ShopAdmin() {
             {adminsStatus === 'succeeded' && admins.length > 0 && (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
                     {admins.map((admin, index) => (
-                        <div key={admin.user_id} className="bg-white rounded-xl p-3 md:p-4 relative">
+                        <div key={admin.user_id} className="bg-white rounded-xl shadow-xl p-3 md:p-4 relative">
                             <div className="aspect-w-1 aspect-h-1 mb-3 md:mb-4 overflow-hidden rounded-lg">
                                 {admin.profile_picture ? (
                                     <img 

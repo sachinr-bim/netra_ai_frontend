@@ -41,6 +41,8 @@ function App() {
       if (result.isConfirmed) {
         // Dispatch Redux logout action (removes token from localStorage)
         dispatch(logout())
+
+        window.location.reload()
         // Update local state
         setIsLoggedIn(false)
         

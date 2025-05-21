@@ -222,7 +222,7 @@ const authSlice = createSlice({
   initialState,
   reducers: {
     logout: (state) => {
-      localStorage.clear() // delete token from storage
+      localStorage.clear() 
       state.loading = false;
       state.userInfo = null;
       state.userToken = null;

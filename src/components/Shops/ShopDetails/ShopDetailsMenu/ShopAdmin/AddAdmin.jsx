@@ -2,17 +2,16 @@ import React, { useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { createShopAdminAPI,getShopAdminsAPI } from '../../../../../reduxToolkit/slices/shopSlice'
 
-export default function AddAdmin({ isOpen, onClose, tenantId }) {
+export default function AddAdmin({ isOpen, onClose, shopId }) {
     const dispatch = useDispatch()
     const { status, error } = useSelector((state) => state.shops)
-    const shops = useSelector((state) => state.shops.shops) // For shop dropdown
 
     const [firstName, setFirstName] = useState("")
     const [lastName, setLastName] = useState("")
     const [email, setEmail] = useState("")
+    const [location, setLocation] = useState("")
     const [phoneNumber, setPhoneNumber] = useState('')
     const [password, setPassword] = useState('')
-    const [shopId, setShopId] = useState("") // Changed to shopId since API likely needs ID
 
     const handleAdd = async (e) => {
         e.preventDefault()
@@ -21,10 +20,13 @@ export default function AddAdmin({ isOpen, onClose, tenantId }) {
             firstname: firstName,
             lastname: lastName,
             email,
+            location,
             phone_number: phoneNumber,
             password_hash: password,
             shop_id: shopId // Assuming your API needs shop ID
         }
+
+        console.log('Admin Data:', adminData)
 
         try {
             await dispatch(createShopAdminAPI(adminData)).unwrap()
@@ -32,11 +34,11 @@ export default function AddAdmin({ isOpen, onClose, tenantId }) {
             setFirstName("")
             setLastName("")
             setEmail("")
+            setLocation("")
             setPhoneNumber("")
             setPassword("")
-            setShopId("")
             onClose()
-            dispatch(getShopAdminsAPI(tenantId))
+            dispatch(getShopAdminsAPI(shopId))
         } catch (err) {
             // Error is already handled in Redux slice
             console.error('Failed to create admin:', err)
@@ -96,24 +98,6 @@ export default function AddAdmin({ isOpen, onClose, tenantId }) {
                             </div>
                         </div>
                         
-                        <div className="mb-3">
-                            <label htmlFor="shopId" className="block text-sm md:text-base lg:text-xl font-semibold mb-1">Shop</label>
-                            <select
-                                id="shopId"
-                                name="shopId"
-                                value={shopId}
-                                onChange={(e) => setShopId(e.target.value)}
-                                className="w-full h-10 md:h-12 p-2 border border-gray-300 rounded-lg text-sm md:text-base bg-white"
-                                required
-                            >
-                                <option value="">Select a shop</option>
-                                {shops.map(shop => (
-                                    <option key={shop.id} value={shop.id}>
-                                        {shop.name}
-                                    </option>
-                                ))}
-                            </select>
-                        </div>
                         
                         <div className="mb-3">
                             <label htmlFor="email" className="block text-sm md:text-base lg:text-xl font-semibold mb-1">Email</label>
@@ -123,6 +107,19 @@ export default function AddAdmin({ isOpen, onClose, tenantId }) {
                                 name='email'
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
+                                className="w-full h-10 md:h-12 p-2 border border-gray-300 rounded-lg text-sm md:text-base" 
+                                required
+                            />
+                        </div>
+
+                        <div className="mb-3">
+                            <label htmlFor="location" className="block text-sm md:text-base lg:text-xl font-semibold mb-1">Location</label>
+                            <input 
+                                type="text" 
+                                id="location" 
+                                name='location'
+                                value={location}
+                                onChange={(e) => setLocation(e.target.value)}
                                 className="w-full h-10 md:h-12 p-2 border border-gray-300 rounded-lg text-sm md:text-base" 
                                 required
                             />
@@ -153,22 +150,25 @@ export default function AddAdmin({ isOpen, onClose, tenantId }) {
                                     minLength="6"
                                 />
                             </div>
-                            <div className='flex gap-4'>
+                            <div>
+                                <div className='flex gap-4'>
                                 <input 
                                     type="checkbox" 
-                                    className="md:h-12 p-2 border border-gray-300 rounded-lg text-sm md:text-base" 
+                                    className="md:h-12 border border-gray-300 rounded-lg text-sm md:text-base" 
                                     required
                                 />
-                                <label htmlFor="password" className="block text-md font-semibold mb-1">Allow Admin To Add or Modify Camera </label>
+                                <label htmlFor="password" className="block text-md font-semibold ">Allow Admin To Modify Camera </label>
                             </div>
                             <div className='flex gap-4' >
                                 <input 
                                     type="checkbox" 
-                                    className="md:h-12 p-2 border border-gray-300 rounded-lg text-sm md:text-base" 
+                                    className="md:h-12 border border-gray-300 rounded-lg text-sm md:text-base" 
                                     required
                                 />
-                                <label htmlFor="password" className="block text-md font-semibold mb-1">Allow Admin To Add or Modify Edge Device </label>
+                                <label htmlFor="password" className="block text-md font-semibold">Allow Admin To Modify Edge Device </label>
                             </div>
+                            </div>
+
                         </div>
 
                         <div className="flex flex-col sm:flex-row justify-end space-y-2 sm:space-y-0 sm:space-x-2">

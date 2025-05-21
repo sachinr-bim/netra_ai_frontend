@@ -51,7 +51,7 @@ const ShopDetails = () => {
       case 'subscription':
         return <ShopCurrentPlan shopId={id} />;
       case 'shopAdmin':
-        return <ShopAdmin />
+        return <ShopAdmin shopId={selectedShop.id} />
       case 'deleteShop':
         return <DeleteShop selectedShop={selectedShop} setActiveTab={setActiveTab} id={selectedShop.id} />;
       default:

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { useDispatch } from 'react-redux'
 import { updateShopAdminAPI,getShopAdminsAPI } from '../../../../../reduxToolkit/slices/shopSlice'
 
-export default function EditAdmin({ isOpen, onClose, adminData, tenantId }) {
+export default function EditAdmin({ isOpen, onClose, adminData, shopId }) {
     const dispatch = useDispatch()
     const [isLoading, setIsLoading] = useState(false)
     const [error, setError] = useState(null)
@@ -12,6 +12,7 @@ export default function EditAdmin({ isOpen, onClose, adminData, tenantId }) {
         firstname: '',
         lastname: '',
         email: '',
+        location: '',
         phone_number: '',
         // Add other fields as needed by your API
     })
@@ -23,6 +24,7 @@ export default function EditAdmin({ isOpen, onClose, adminData, tenantId }) {
                 firstname: adminData.firstname || '',
                 lastname: adminData.lastname || '',
                 email: adminData.email || '',
+                location: adminData.location || '',
                 phone_number: adminData.phone_number || '',
                 // Initialize other fields here
             })
@@ -48,6 +50,7 @@ export default function EditAdmin({ isOpen, onClose, adminData, tenantId }) {
                 firstname: formData.firstname,
                 lastname: formData.lastname,
                 email: formData.email,
+                location: formData.location,
                 phone_number: formData.phone_number,
                 // Include other fields your API expects
             }
@@ -59,7 +62,7 @@ export default function EditAdmin({ isOpen, onClose, adminData, tenantId }) {
 
             if (updateShopAdminAPI.fulfilled.match(resultAction)) {
                 onClose() // Close modal on success
-                dispatch(getShopAdminsAPI(tenantId));
+                dispatch(getShopAdminsAPI(shopId));
             } else {
                 throw new Error(resultAction.payload || "Update failed")
             }
@@ -141,6 +144,22 @@ export default function EditAdmin({ isOpen, onClose, adminData, tenantId }) {
                                 id="email"
                                 name="email"
                                 value={formData.email}
+                                onChange={handleChange}
+                                className="w-full p-2 border rounded"
+                                required
+                            />
+                        </div>
+
+                        {/* Location */}
+                        <div className="mb-4">
+                            <label htmlFor="location" className="block text-sm font-medium mb-1">
+                                Location
+                            </label>
+                            <input
+                                type="text"
+                                id="location"
+                                name="location"
+                                value={formData.location}
                                 onChange={handleChange}
                                 className="w-full p-2 border rounded"
                                 required

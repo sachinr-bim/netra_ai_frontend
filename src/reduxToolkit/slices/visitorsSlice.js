@@ -37,39 +37,27 @@ export const fetchVisitorsByGender = createAsyncThunk(
 );
 
 // New endpoint for date range filtering
-export const fetchVisitorsByGenderWithDateRange = createAsyncThunk(
-  'visitor/fetchVisitorsByGenderWithDateRange',
+export const fetchVisitorsByDateRange = createAsyncThunk(
+  'visitor/fetchVisitorsByDateRange',
   async ({ shopId, startDate, endDate }, { getState }) => {
     const token = getState().auth.userToken;
-    const response = await axios.get(`${API_URL}/${shopId}/gender/date`, {
+    const response = await axios.get(`${API_URL}/${shopId}/count/date`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
-      params: { startDate, endDate }
-    });
-    
-    const genderData = {
-      male: 0,
-      female: 0,
-      startDate,
-      endDate
-    };
-    
-    response.data.data.forEach(item => {
-      if (item.gender.toUpperCase() === 'FEMALE') {
-        genderData.female = parseInt(item.count);
-      } else if (item.gender.toUpperCase() === 'MALE') {
-        genderData.male = parseInt(item.count);
+      params: {
+        startDate,
+        endDate
       }
     });
     
-    return { shopId, data: genderData };
+    return { shopId, data: response.data.data, startDate, endDate };
   }
 );
 
 const initialState = {
   visitorsByGender: {},
-  filteredVisitorsByGender: {}, // Separate store for filtered data
+  visitorsByDateRange: {},
   loading: false,
   filterLoading: false,
   error: null,
@@ -103,17 +91,17 @@ const visitorSlice = createSlice({
         state.error = action.error.message;
       })
       // Date range endpoint handlers
-      .addCase(fetchVisitorsByGenderWithDateRange.pending, (state) => {
-        state.filterLoading = true;
+      .addCase(fetchVisitorsByDateRange.pending, (state) => {
+        state.dateRangeLoading = true;
         state.error = null;
       })
-      .addCase(fetchVisitorsByGenderWithDateRange.fulfilled, (state, action) => {
-        state.filterLoading = false;
+      .addCase(fetchVisitorsByDateRange.fulfilled, (state, action) => {
+        state.dateRangeLoading = false;
         const { shopId, data } = action.payload;
-        state.filteredVisitorsByGender[shopId] = data;
+        state.visitorsByDateRange[shopId] = data;
       })
-      .addCase(fetchVisitorsByGenderWithDateRange.rejected, (state, action) => {
-        state.filterLoading = false;
+      .addCase(fetchVisitorsByDateRange.rejected, (state, action) => {
+        state.dateRangeLoading = false;
         state.error = action.error.message;
       });
   }

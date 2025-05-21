@@ -1,6 +1,10 @@
 import { useState, useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
-import { fetchAnomaliesForTenant } from "../../reduxToolkit/slices/anomalySlice";
+import { 
+  fetchAnomaliesForTenant,
+  filterAnomalies,
+  setCurrentPage
+} from "../../reduxToolkit/slices/anomalySlice";
 import { fetchShopsByTenantAPI } from "../../reduxToolkit/slices/shopSlice";
 import AnomalyFilter from "./AnomalyFilter";
 import AnomalyTable from "./AnomalyTable";
@@ -8,28 +12,41 @@ import SearchIcon from "../../assets/icons/SearchIcon";
 
 export default function Anomaly() {
   const dispatch = useDispatch();
-  const anomalies = useSelector(state => state.anomaly.anomalies);
-  const loading = useSelector(state => state.anomaly.loading);
+  const { 
+    anomalies, 
+    filteredAnomalies, 
+    loading, 
+    pagination 
+  } = useSelector(state => state.anomaly);
   const shops = useSelector(state => state.shops.shops);
   
-
-
   const [searchTerm, setSearchTerm] = useState("");
   const [showFilters, setShowFilters] = useState(false);
   const [filters, setFilters] = useState({ 
-    anomalyType: "", 
-    feedbackStatus: "" 
+    shopId: "",
+    anomalyType: [], 
+    feedbackStatus: "",
+    page: 1,
+    pageSize: 12
   });
 
   useEffect(() => {
     dispatch(fetchAnomaliesForTenant());
+    dispatch(fetchShopsByTenantAPI());
   }, [dispatch]);
 
-    useEffect(() => {
-      dispatch(fetchShopsByTenantAPI());
-    }, [dispatch]);
+  console.log('Anomalies:', anomalies)
+  // Apply filters when they change
+  useEffect(() => {
+    if (filters.shopId || filters.anomalyType.length > 0) {
+      dispatch(filterAnomalies(filters));
+    }
+  }, [dispatch, filters]);
 
-  // DEBUG: Log the raw anomalies data
+  const handlePageChange = (page) => {
+    dispatch(setCurrentPage(page));
+    setFilters(prev => ({ ...prev, page }));
+  };
 
   if (loading) {
     return (
@@ -39,13 +56,18 @@ export default function Anomaly() {
     );
   }
 
-  // Format anomalies data - SIMPLIFIED without error handling
-  const formattedAnomalies = anomalies.map(anomaly => {
+  // Use filtered anomalies if filters are active, otherwise use all anomalies
+  const anomaliesToDisplay = filters.shopId || filters.anomalyType.length > 0 
+    ? filteredAnomalies 
+    : anomalies;
+
+  // Format anomalies data
+  const formattedAnomalies = anomaliesToDisplay.map(anomaly => {
     const shop = shops.find(shop => shop.id === anomaly.shop_id);
     return {
       id: anomaly.anomaly_id,
       dateTime: new Date(anomaly.event_recorded_dt).toLocaleString(),
-      shopName: shop ? shop.name : `Shop ${anomaly.shop_id}`,
+      shopName: shop && shop.name,
       cameraName: `Camera ${anomaly.camera_id}`,
       detectionType: anomaly.anomaly_type,
       anomalyName: anomaly.anomaly_name,
@@ -53,23 +75,6 @@ export default function Anomaly() {
       userFeedback: anomaly.feedback,
       correctedLabel: anomaly.modified_by !== anomaly.created_by ? 'Corrected' : 'Unverified'
     };
-  });
-
-  // Filter anomalies
-  const filteredAnomalies = formattedAnomalies.filter(anomaly => {
-    const matchesSearch = !searchTerm || 
-      anomaly.shopName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      anomaly.cameraName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      anomaly.detectionType.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      anomaly.anomalyName.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    const matchesType = !filters.anomalyType || 
-      anomaly.detectionType === filters.anomalyType;
-    
-    const matchesFeedback = !filters.feedbackStatus || 
-      (filters.feedbackStatus === "withFeedback" ? anomaly.userFeedback : !anomaly.userFeedback);
-      
-    return matchesSearch && matchesType && matchesFeedback;
   });
 
   // Get unique anomaly types for filter dropdown
@@ -100,6 +105,7 @@ export default function Anomaly() {
 
         {showFilters && (
           <AnomalyFilter 
+            shops={shops}
             anomalyTypes={anomalyTypes} 
             filters={filters}
             setFilters={setFilters}
@@ -107,7 +113,11 @@ export default function Anomaly() {
         )}
       </div>
 
-      <AnomalyTable anomalies={filteredAnomalies} />
+      <AnomalyTable 
+        anomalies={formattedAnomalies} 
+        pagination={pagination}
+        onPageChange={handlePageChange}
+      />
     </div>
   );
 }

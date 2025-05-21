@@ -429,6 +429,7 @@ const shopsSlice = createSlice({
         firstname: admin.userDetails.firstname,
         lastname: admin.userDetails.lastname,
         email: admin.userDetails.email,
+        location: admin.userDetails.location,
         phone_number: admin.userDetails.phone_number,
         role_id: admin.userDetails.role_id,
         status: admin.userDetails.status,

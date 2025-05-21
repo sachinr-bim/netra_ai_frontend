@@ -16,7 +16,7 @@ export default function SettingsSubscription() {
             <table className="w-full border-collapse">
               <thead>
                 <tr className="bg-[#fff5e7]">
-                  {["Invoice ID", "Payment Date", "Amount", "Plan", "Method", "Status", "Action"].map(header => (
+                  {["Invoice ID", "Payment Date", "Amount", "Method", "Action"].map(header => (
                     <th key={header} className="text-left p-3 md:p-4 text-sm md:text-base whitespace-nowrap">
                       {header}
                     </th>
@@ -27,17 +27,10 @@ export default function SettingsSubscription() {
                 {payments.length > 0 ? (
                   payments.map((payment, index) => (
                     <tr key={index} className="hover:bg-[#fff5e7]/50 border-t border-gray-100">
-                      <td className="p-3 md:p-4 text-sm md:text-base whitespace-nowrap">{payment.id}</td>
-                      <td className="p-3 md:p-4 text-sm md:text-base whitespace-nowrap">{payment.date}</td>
+                      <td className="p-3 md:p-4 text-sm md:text-base whitespace-nowrap">{payment.transaction_id}</td>
+                      <td className="p-3 md:p-4 text-sm md:text-base whitespace-nowrap">{payment.createdAt}</td>
                       <td className="p-3 md:p-4 text-sm md:text-base whitespace-nowrap">{payment.amount}</td>
-                      <td className="p-3 md:p-4 text-sm md:text-base whitespace-nowrap">{payment.plan}</td>
-                      <td className="p-3 md:p-4 text-sm md:text-base whitespace-nowrap">{payment.method}</td>
-                      <td className={`p-3 md:p-4 text-sm md:text-base font-medium whitespace-nowrap ${
-                        payment.status === 'Pending' ? 'text-orange-500' : 
-                        payment.status === 'Paid' ? 'text-green-500' : 'text-red-500'
-                      }`}>
-                        {payment.status}
-                      </td>
+                      <td className="p-3 md:p-4 text-sm md:text-base whitespace-nowrap">{payment.payment_method}</td>
                       <td className="p-3 md:p-4 text-gray-500 cursor-pointer text-xl">⋮</td>
                     </tr>
                   ))
