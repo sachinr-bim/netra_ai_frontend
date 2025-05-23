@@ -1,6 +1,9 @@
 import { createSlice,createAsyncThunk } from "@reduxjs/toolkit";
 
+// Packages and Libraries
 import axios from "axios";
+
+const API_URL = import.meta.env.VITE_API_URL
 
 
 export const createShopAPI = createAsyncThunk(
@@ -12,7 +15,8 @@ export const createShopAPI = createAsyncThunk(
       // Transform the shopData to match the API expected format
       const requestBody = {
         name: shopData.name,
-        address: shopData.address, // Assuming location in your UI maps to address in API
+        address: shopData.address,
+        shop_pic: shopData.shop_pic, // Assuming location in your UI maps to address in API
         total_cameras: shopData.total_cameras || 0,
         total_admin: shopData.total_admin || 0,
         geo_latitude: shopData.coordinates?.lat || 0,
@@ -20,7 +24,7 @@ export const createShopAPI = createAsyncThunk(
       };
       
       const response = await axios.post(
-        "http://52.90.112.216/api/shop/create",
+        `${API_URL}/api/shop/create`,
         requestBody, // Use the transformed request body
         {
           headers: {
@@ -39,13 +43,41 @@ export const createShopAPI = createAsyncThunk(
   }
 );
 
+// Add this to your existing async thunks in shopSlice.js
+export const uploadShopPicAPI = createAsyncThunk(
+  'shops/uploadShopPic',
+  async (file, { rejectWithValue }) => {
+    try {
+      const token = localStorage.getItem('userToken');
+      
+      const formData = new FormData();
+      formData.append('shop_pic', file);
+
+      const response = await axios.post(
+        `${API_URL}/api/shop/uploadShopPic`,
+        formData,
+        {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+            'Authorization': `Bearer ${token}`,
+          },
+        }
+      );
+      
+      return response.data; // Should contain the image URL
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.message || error.message);
+    }
+  }
+);
+
 export const fetchShopsByTenantAPI = createAsyncThunk(
   'shops/fetchShopsByTenant',
   async (_, { rejectWithValue }) => {
     try {
       const token = localStorage.getItem('userToken');
       const response = await axios.get(
-        "http://52.90.112.216/api/shop/getByTenant",
+        `${API_URL}/api/shop/getByTenant`,
         {
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -57,6 +89,7 @@ export const fetchShopsByTenantAPI = createAsyncThunk(
       console.log(response.data?.shops)
       return response.data?.shops || [];
     } catch (error) {
+      console.log(error.response?.data?.message)
       return rejectWithValue(error.response?.data?.message || error.message);
     }
   }
@@ -69,7 +102,7 @@ export const fetchShopByIdAPI = createAsyncThunk(
     try {
       const token = localStorage.getItem('userToken');
       const response = await axios.get(
-        `http://52.90.112.216/api/shop/getById/${shopId}`,
+        `${API_URL}/api/shop/getById/${shopId}`,
         {
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -89,7 +122,7 @@ export const deleteShopAPI = createAsyncThunk(
     try {
       const token = localStorage.getItem('userToken');
       const response = await axios.delete(
-        `http://52.90.112.216/api/shop/delete/${shopId}`,
+        `${API_URL}/api/shop/delete/${shopId}`,
         {
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -114,6 +147,7 @@ export const updateShopAPI = createAsyncThunk(
       const requestBody = {
         name: shopData.name,
         address: shopData.address,
+        shop_pic: shopData.shop_pic,
         total_cameras: shopData.total_cameras || 0,
         total_admin: shopData.total_admin || 0,
         geo_latitude: shopData.coordinates?.lat || 0,
@@ -121,7 +155,7 @@ export const updateShopAPI = createAsyncThunk(
       };
       
       const response = await axios.put(
-        `http://52.90.112.216/api/shop/update/${shopId}`,
+        `${API_URL}/api/shop/update/${shopId}`,
         requestBody,
         {
           headers: {
@@ -148,7 +182,7 @@ export const createShopAdminAPI = createAsyncThunk(
       const token = localStorage.getItem('userToken'); // Get token from storage
       
       const response = await axios.post(
-        "http://52.90.112.216/api/user/createShopAdmin",
+        `${API_URL}/api/user/createShopAdmin`,
         adminData,
         {
           headers: {
@@ -170,15 +204,14 @@ export const createShopAdminAPI = createAsyncThunk(
 
 export const getShopAdminsAPI = createAsyncThunk(
   'shops/getShopAdmins',
-  async (tenantId, { getState, rejectWithValue }) => {
+  async (shopId, { getState, rejectWithValue }) => {
     try {
       const token = localStorage.getItem('userToken');
       console.log('token:', token);
       
       const response = await axios.get(
-        "http://52.90.112.216/api/user/getShopAdminsByTenant",
+        `${API_URL}/api/user/getShopAdminsByShop/${shopId}`,
         {
-          params: { id: tenantId },  // Send tenantId as query parameter
           headers: {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${token}`,
@@ -203,7 +236,7 @@ export const updateShopAdminAPI = createAsyncThunk(
       const token = localStorage.getItem('userToken');
       
       const response = await axios.put(
-        `http://52.90.112.216/api/user/updateShopAdmin/${id}`,
+        `${API_URL}/api/user/updateShopAdmin/${id}`,
         adminData,
         {
           headers: {
@@ -228,7 +261,7 @@ export const deleteShopAdminAPI = createAsyncThunk(
       console.log('Deleting admin with id:', id);
       
       const response = await axios.delete(
-        `http://52.90.112.216/api/user/deleteShopAdmin/${id}`,
+        `${API_URL}/api/user/deleteShopAdmin/${id}`,
         {
           headers: {
             'Content-Type': 'application/json',
@@ -314,7 +347,7 @@ const shopsSlice = createSlice({
         state.shops.push({
           id: action.payload.id || Date.now(),
           name: action.payload.name,
-          image: action.payload.image || "https://via.placeholder.com/150",
+          shop_pic: action.payload.shop_pic || "https://via.placeholder.com/150",
           address: action.payload.address, // Map address back to location
           coordinates: { 
             lat: action.payload.geo_latitude || 0, 
@@ -375,6 +408,7 @@ const shopsSlice = createSlice({
           id: shop.shop_id,
           name: shop.name,
           address: shop.address,
+          shop_pic: shop.shop_pic,
           total_admin: shop.total_admin,
           total_cameras: shop.total_cameras
         }));
@@ -464,6 +498,19 @@ const shopsSlice = createSlice({
         }
       })
       .addCase(updateShopAPI.rejected, (state, action) => {
+        state.status = 'failed';
+        state.error = action.payload;
+      })
+      .addCase(uploadShopPicAPI.pending, (state) => {
+        state.status = 'loading';
+        state.error = null;
+      })
+      .addCase(uploadShopPicAPI.fulfilled, (state, action) => {
+        state.status = 'succeeded';
+        // You might want to store the uploaded image URL somewhere
+        // or handle it in the component directly
+      })
+      .addCase(uploadShopPicAPI.rejected, (state, action) => {
         state.status = 'failed';
         state.error = action.payload;
       })

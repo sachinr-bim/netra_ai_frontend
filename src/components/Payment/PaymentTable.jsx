@@ -8,7 +8,7 @@ export default function PaymentTable({ filteredPayments }) {
   const [selectedPaymentId, setSelectedPaymentId] = useState(null);
   const [showDropdownId, setShowDropdownId] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
-  const recordsPerPage = 10;
+  const recordsPerPage = 5; // Reduced for better mobile experience
 
   // Calculate pagination
   const indexOfLastRecord = currentPage * recordsPerPage;
@@ -19,7 +19,6 @@ export default function PaymentTable({ filteredPayments }) {
   const handleDelete = (paymentId) => {
     if (window.confirm("Are you sure you want to delete this payment?")) {
       dispatch(deleteExistingPayment(paymentId));
-      // Reset to first page if the last record on current page is deleted
       if (currentRecords.length === 1 && currentPage > 1) {
         setCurrentPage(currentPage - 1);
       }
@@ -31,17 +30,12 @@ export default function PaymentTable({ filteredPayments }) {
     setShowDropdownId(showDropdownId === paymentId ? null : paymentId);
   };
 
-  const closeDropdown = () => {
-    setShowDropdownId(null);
-  };
-
   useEffect(() => {
-    const handleClickOutside = () => closeDropdown();
+    const handleClickOutside = () => setShowDropdownId(null);
     document.addEventListener('click', handleClickOutside);
     return () => document.removeEventListener('click', handleClickOutside);
   }, []);
 
-  // Reset to first page when filteredPayments changes
   useEffect(() => {
     setCurrentPage(1);
   }, [filteredPayments]);
@@ -55,14 +49,14 @@ export default function PaymentTable({ filteredPayments }) {
         />
       )}
       
-      <div className="p-4 md:p-6">
-        <h1 className="text-xl md:text-2xl font-semibold mb-4">Payment List</h1>
+      <div className="p-3 xs:p-4 sm:p-4 md:p-6">
+        <h1 className="text-lg xs:text-xl sm:text-xl md:text-2xl font-semibold mb-3 xs:mb-4">Payment List</h1>
         <div className="overflow-x-auto">
           <table className="w-full border-collapse">
             <thead>
               <tr className="bg-[#fff5e7]">
-                {["Invoice ID", "Payment Date", "Amount", "Method", "Status", "Action"].map(header => (
-                  <th key={header} className="text-left p-3 md:p-4 text-sm md:text-base whitespace-nowrap">
+                {["Transaction ID", "Date", "Amount", "Method", "Status"].map(header => (
+                  <th key={header} className="text-left p-2 xs:p-3 sm:p-3 md:p-4 text-xs xs:text-sm sm:text-sm md:text-base whitespace-nowrap">
                     {header}
                   </th>
                 ))}
@@ -71,59 +65,38 @@ export default function PaymentTable({ filteredPayments }) {
             <tbody>
               {currentRecords.length > 0 ? (
                 currentRecords.map((payment) => (
-                  <tr key={payment.transaction_id} className="hover:bg-[#fff5e7]/50 border-t border-gray-100">
-                    <td className="p-3 md:p-4 text-sm md:text-base whitespace-nowrap">{payment.transaction_id}</td>
-                    <td className="p-3 md:p-4 text-sm md:text-base whitespace-nowrap">
+                  <tr 
+                    key={payment.transaction_id} 
+                    className="hover:bg-[#fff5e7]/50 border-t border-gray-100"
+                    onClick={() => setSelectedPaymentId(payment.id)}
+                  >
+                    <td className="p-2 xs:p-3 sm:p-3 md:p-4 text-xs xs:text-sm sm:text-sm md:text-base whitespace-nowrap">
+                      <span className="truncate max-w-[80px] xs:max-w-[120px] sm:max-w-[150px] md:max-w-none inline-block">
+                        {payment.transaction_id}
+                      </span>
+                    </td>
+                    <td className="p-2 xs:p-3 sm:p-3 md:p-4 text-xs xs:text-sm sm:text-sm md:text-base whitespace-nowrap">
                       {new Date(payment.createdAt).toLocaleDateString('en-US', {
-                        year: 'numeric',
                         month: 'short',
-                        day: 'numeric'
+                        day: 'numeric',
+                        year: currentPage > 1 ? undefined : 'numeric'
                       })}
                     </td>
-                    <td className="p-3 md:p-4 text-sm md:text-base whitespace-nowrap">${payment.amount}</td>
-                    <td className="p-3 md:p-4 text-sm md:text-base whitespace-nowrap">{payment.payment_method}</td>
-                    <td className={`p-3 md:p-4 text-sm md:text-base font-medium whitespace-nowrap ${
+                    <td className="p-2 xs:p-3 sm:p-3 md:p-4 text-xs xs:text-sm sm:text-sm md:text-base whitespace-nowrap">${payment.amount}</td>
+                    <td className="p-2 xs:p-3 sm:p-3 md:p-4 text-xs xs:text-sm sm:text-sm md:text-base whitespace-nowrap">
+                      {payment.payment_method.replace(/Payment|Method/gi, '').trim()}
+                    </td>
+                    <td className={`p-2 xs:p-3 sm:p-3 md:p-4 text-xs xs:text-sm sm:text-sm md:text-base font-medium whitespace-nowrap ${
                       payment.payment_status === 'Pending' ? 'text-orange-500' : 'text-green-500'
                     }`}>
                       {payment.payment_status}
-                    </td>
-                    <td className="p-3 md:p-4 text-gray-500 cursor-pointer text-xl relative">
-                      <button 
-                        onClick={(e) => toggleDropdown(payment.payment_id, e)}
-                        className="text-xl hover:bg-gray-100 rounded-full w-8 h-8 flex items-center justify-center"
-                      >
-                        ⋮
-                      </button>
-                      
-                      {showDropdownId === payment.payment_id && (
-                        <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-10 border border-gray-200">
-                          <button 
-                            onClick={() => {
-                              setSelectedPaymentId(payment.payment_id);
-                              closeDropdown();
-                            }}
-                            className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
-                          >
-                            View
-                          </button>
-                          <button 
-                            onClick={() => {
-                              handleDelete(payment.payment_id);
-                              closeDropdown();
-                            }}
-                            className="block w-full text-left px-4 py-2 text-sm text-red-500 hover:bg-red-50"
-                          >
-                            Delete
-                          </button>
-                        </div>
-                      )}
                     </td>
                   </tr>
                 ))
               ) : (
                 <tr>
-                  <td colSpan="6" className="p-4 text-center text-gray-500">
-                    No payments found matching your filters
+                  <td colSpan="5" className="p-4 text-center text-gray-500">
+                    No payments found
                   </td>
                 </tr>
               )}
@@ -133,23 +106,32 @@ export default function PaymentTable({ filteredPayments }) {
 
         {/* Pagination Controls */}
         {filteredPayments.length > recordsPerPage && (
-          <div className="flex items-center justify-between mt-4">
-            <div className="text-sm text-gray-500">
-              Showing {indexOfFirstRecord + 1} to {Math.min(indexOfLastRecord, filteredPayments.length)} of {filteredPayments.length} entries
+          <div className="flex flex-col xs:flex-row items-center justify-between gap-3 mt-4">
+            <div className="text-xs xs:text-sm text-gray-500">
+              Showing {indexOfFirstRecord + 1} to {Math.min(indexOfLastRecord, filteredPayments.length)} of {filteredPayments.length}
             </div>
-            <div className="flex space-x-2">
+            <div className="flex flex-wrap justify-center gap-1 xs:gap-2">
               <button
                 onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
                 disabled={currentPage === 1}
-                className={`px-3 py-1 rounded-md border ${currentPage === 1 ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : 'hover:bg-gray-100'}`}
+                className={`px-2 xs:px-3 py-1 rounded-md border text-xs xs:text-sm ${
+                  currentPage === 1 ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : 'hover:bg-gray-100'
+                }`}
               >
-                Previous
+                Prev
               </button>
-              {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
+              {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
+                if (totalPages <= 5) return i + 1;
+                if (currentPage <= 3) return i + 1;
+                if (currentPage >= totalPages - 2) return totalPages - 4 + i;
+                return currentPage - 2 + i;
+              }).map(page => (
                 <button
                   key={page}
                   onClick={() => setCurrentPage(page)}
-                  className={`px-3 py-1 rounded-md border ${currentPage === page ? 'bg-[#fff5e7] font-medium' : 'hover:bg-gray-100'}`}
+                  className={`px-2 xs:px-3 py-1 rounded-md border text-xs xs:text-sm ${
+                    currentPage === page ? 'bg-[#fff5e7] font-medium' : 'hover:bg-gray-100'
+                  }`}
                 >
                   {page}
                 </button>
@@ -157,7 +139,9 @@ export default function PaymentTable({ filteredPayments }) {
               <button
                 onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
                 disabled={currentPage === totalPages}
-                className={`px-3 py-1 rounded-md border ${currentPage === totalPages ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : 'hover:bg-gray-100'}`}
+                className={`px-2 xs:px-3 py-1 rounded-md border text-xs xs:text-sm ${
+                  currentPage === totalPages ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : 'hover:bg-gray-100'
+                }`}
               >
                 Next
               </button>

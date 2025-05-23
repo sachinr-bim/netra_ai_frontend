@@ -45,14 +45,14 @@ export default function EdgeDevice({ shopId }) {
       {/* Displaying the list of devices */}
       {devices.map((device) => (
         <DeviceDetails 
-          key={device.device_id} 
+          key={device?.device_id} 
           shopId={shopId}
-          id={device.device_id}
-          deviceModel={device.name}
-          RAM={device.ram}
-          CPU={device.cpu}
-          SSD={device.ssd}
-          configuration={device.configuration}
+          id={device?.device_id}
+          deviceModel={device?.name}
+          RAM={device?.ram}
+          CPU={device?.cpu}
+          SSD={device?.ssd}
+          configuration={device?.configuration}
           editMode={editMode}
           setEditMode={setEditMode}
         />

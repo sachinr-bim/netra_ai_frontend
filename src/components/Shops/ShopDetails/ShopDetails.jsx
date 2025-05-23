@@ -99,16 +99,22 @@ const ShopDetails = () => {
       <div className="flex flex-col lg:flex-row gap-6 mb-6">
         {/* Shop Info Section */}
         <div className="relative rounded-lg overflow-hidden flex-4 min-h-80">
-          <img
-            src="https://static.nike.com/a/images/f_auto/c8a2ec76-6665-4203-8852-f4ee668aaa7a/image.jpg"
-            alt="Shop"
-            className="w-full h-60 object-cover"
-            onError={(e) => {
-              e.target.src = "https://cdn-icons-png.freepik.com/256/869/869636.png?semt=ais_hybrid";
-              e.target.className = "w-full h-60 object-contain p-4 bg-gray-100";
-            }}
-          />
-          
+          {selectedShop.shop_pic ? (
+            <img
+              src={selectedShop.shop_pic}
+              alt="Shop"
+              className="w-full h-60 object-cover"
+              onError={(e) => {
+                e.target.src = "https://cdn-icons-png.freepik.com/256/869/869636.png?semt=ais_hybrid";
+                e.target.className = "w-full h-60 object-contain p-4 bg-gray-100";
+              }}
+            />
+          ) : (
+            <div className="w-full h-60 bg-gray-100 flex items-center justify-center">
+              <span className="text-6xl">No Image Available</span>
+            </div>
+          )}
+
           <div className="absolute bottom-0 left-0 right-0 bg-white bg-opacity-90 backdrop-blur-sm p-4 md:p-6 rounded-t-lg">
             <div className="flex flex-col md:flex-row justify-between gap-4">
               <div>
@@ -120,7 +126,6 @@ const ShopDetails = () => {
                   <LocationIcon size={16} width="1em" />
                   <span className="line-clamp-1">{selectedShop.address}</span>
                 </p>
-                
               </div>
             </div>
           </div>

@@ -35,8 +35,6 @@ export default function Anomaly() {
     dispatch(fetchShopsByTenantAPI());
   }, [dispatch]);
 
-  console.log('Anomalies:', anomalies)
-  // Apply filters when they change
   useEffect(() => {
     if (filters.shopId || filters.anomalyType.length > 0) {
       dispatch(filterAnomalies(filters));
@@ -56,18 +54,16 @@ export default function Anomaly() {
     );
   }
 
-  // Use filtered anomalies if filters are active, otherwise use all anomalies
   const anomaliesToDisplay = filters.shopId || filters.anomalyType.length > 0 
     ? filteredAnomalies 
     : anomalies;
 
-  // Format anomalies data
   const formattedAnomalies = anomaliesToDisplay.map(anomaly => {
     const shop = shops.find(shop => shop.id === anomaly.shop_id);
     return {
       id: anomaly.anomaly_id,
       dateTime: new Date(anomaly.event_recorded_dt).toLocaleString(),
-      shopName: shop && shop.name,
+      shopName: shop?.name || 'Unknown Shop',
       cameraName: `Camera ${anomaly.camera_id}`,
       detectionType: anomaly.anomaly_type,
       anomalyName: anomaly.anomaly_name,
@@ -77,47 +73,49 @@ export default function Anomaly() {
     };
   });
 
-  // Get unique anomaly types for filter dropdown
   const anomalyTypes = [...new Set(anomalies.map(anomaly => anomaly.anomaly_type))];
 
   return (
-    <div className="bg-gray-100 p-4 md:p-6">
-      <div className="bg-white mb-6 p-4 md:p-7 rounded-xl">
-        <div className="flex flex-col md:flex-row gap-4">
-          <div className="relative flex-grow">
-            <SearchIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-            <input
-              type="text"
-              placeholder="Search anomalies..."
-              className="w-full pl-10 pr-4 py-3 bg-gray-100 rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--theme-color)]"
-              value={searchTerm}
-              onChange={e => setSearchTerm(e.target.value)}
-            />
+    <div className="bg-gray-100 min-h-screen p-4 md:p-6 lg:p-4">
+      <div className="max-w-screen mx-auto">
+        <div className="bg-white mb-6 p-4 md:p-6 rounded-xl">
+          {/* Search and Filter Row - EXACTLY as you had it, only made container responsive */}
+          <div className="flex flex-col md:flex-row gap-4">
+            <div className="relative flex-grow">
+              <SearchIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+              <input
+                type="text"
+                placeholder="Search anomalies..."
+                className="w-full pl-10 pr-4 py-3 bg-gray-100 rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--theme-color)]"
+                value={searchTerm}
+                onChange={e => setSearchTerm(e.target.value)}
+              />
+            </div>
+            
+            <button 
+              onClick={() => setShowFilters(!showFilters)}
+              className="px-4 py-2 border border-[var(--theme-color)] text-[var(--theme-color)] rounded-md hover:bg-[var(--theme-color)] hover:text-white transition-colors"
+            >
+              {showFilters ? 'Hide Filters' : 'Filters'}
+            </button>
           </div>
-          
-          <button 
-            onClick={() => setShowFilters(!showFilters)}
-            className="px-4 py-2 border border-[var(--theme-color)] text-[var(--theme-color)] rounded-md hover:bg-[var(--theme-color)] hover:text-white transition-colors"
-          >
-            {showFilters ? 'Hide Filters' : 'Filters'}
-          </button>
+
+          {showFilters && (
+            <AnomalyFilter 
+              shops={shops}
+              anomalyTypes={anomalyTypes} 
+              filters={filters}
+              setFilters={setFilters}
+            />
+          )}
         </div>
 
-        {showFilters && (
-          <AnomalyFilter 
-            shops={shops}
-            anomalyTypes={anomalyTypes} 
-            filters={filters}
-            setFilters={setFilters}
-          />
-        )}
+        <AnomalyTable 
+          anomalies={formattedAnomalies} 
+          pagination={pagination}
+          onPageChange={handlePageChange}
+        />
       </div>
-
-      <AnomalyTable 
-        anomalies={formattedAnomalies} 
-        pagination={pagination}
-        onPageChange={handlePageChange}
-      />
     </div>
   );
 }

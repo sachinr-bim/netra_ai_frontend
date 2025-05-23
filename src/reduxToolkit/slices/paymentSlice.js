@@ -2,14 +2,14 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "axios";
 
-const API_URL = "http://52.90.112.216/api/payment/tenant/";
+const API_URL = import.meta.env.VITE_API_URL
 
 export const fetchPayments = createAsyncThunk(
   "payments/fetchPayments",
   async (_, { rejectWithValue, getState }) => {
     try {
       const token = getState().auth.userToken;
-      const response = await axios.get(API_URL, {
+      const response = await axios.get(`${API_URL}/api/payment/tenant/`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       return response.data;
@@ -24,7 +24,7 @@ export const fetchPaymentDetails = createAsyncThunk(
   async (paymentId, { rejectWithValue, getState }) => {
     try {
       const token = getState().auth.userToken;
-      const response = await axios.get(`http://52.90.112.216/api/payment/${paymentId}`, {
+      const response = await axios.get(`${API_URL}/api/payment/${paymentId}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       return response.data;
@@ -39,7 +39,7 @@ export const updateExistingPayment = createAsyncThunk(
   async ({ id, updatedData }, { rejectWithValue, getState }) => {
     try {
       const token = getState().auth.userToken;
-      const response = await axios.put(`${API_URL}${id}/`, updatedData, {
+      const response = await axios.put(`${API_URL}/api/payment/tenant/${id}/`, updatedData, {
         headers: { Authorization: `Bearer ${token}` }
       });
       return response.data;
@@ -54,7 +54,7 @@ export const deleteExistingPayment = createAsyncThunk(
   async (id, { rejectWithValue, getState }) => {
     try {
       const token = getState().auth.userToken;
-      await axios.delete(`${API_URL}${id}/`, {
+      await axios.delete(`${API_URL}/api/payment/tenant/${id}/`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       return id;

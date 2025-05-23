@@ -1,12 +1,14 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import axios from 'axios';
 
+const API_URL = import.meta.env.VITE_API_URL
+
 // Async thunk for creating a ticket
 export const createTicket = createAsyncThunk(
   'tickets/createTicket',
   async (ticketData, { rejectWithValue }) => {
     try {
-      const response = await axios.post(`http://52.90.112.216/api/ticket/create`, ticketData, {
+      const response = await axios.post(`${API_URL}/api/ticket/create`, ticketData, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('userToken')}`
         }
@@ -24,7 +26,7 @@ export const fetchTicketsByShop = createAsyncThunk(
   'tickets/fetchTicketsByShop',
   async (shopId, { rejectWithValue }) => {
     try {
-      const response = await axios.get(`http://52.90.112.216/api/ticket/shop/${shopId}`, {
+      const response = await axios.get(`${API_URL}/api/ticket/shop/${shopId}`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('userToken')}`
         }
@@ -41,7 +43,7 @@ export const deleteTicket = createAsyncThunk(
   async (ticketId, { rejectWithValue }) => {
     try {
       const response = await axios.delete(
-        `http://52.90.112.216/api/ticket/delete/${ticketId}`,
+        `${API_URL}/api/ticket/delete/${ticketId}`,
         {
           headers: {
             'Authorization': `Bearer ${localStorage.getItem('userToken')}`
@@ -60,7 +62,7 @@ export const updateTicketStatus = createAsyncThunk(
   async ({ ticketId, updateData }, { rejectWithValue }) => {
     try {
       const response = await axios.patch(
-        `http://52.90.112.216/api/ticket/update/${ticketId}`,
+        `${API_URL}/api/ticket/update/${ticketId}`,
         updateData,
         {
           headers: {
@@ -80,7 +82,7 @@ export const fetchTicketById = createAsyncThunk(
   async (ticketId, { rejectWithValue }) => {
     try {
       const response = await axios.get(
-        `http://52.90.112.216/api/ticket/${ticketId}`,
+        `${API_URL}/api/ticket/${ticketId}`,
         {
           headers: {
             'Authorization': `Bearer ${localStorage.getItem('userToken')}`

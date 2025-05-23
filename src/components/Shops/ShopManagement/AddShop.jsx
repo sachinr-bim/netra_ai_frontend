@@ -14,14 +14,15 @@ export default function AddShop({ isOpen, onClose }) {
     address: "", // Matches API field name
     adminCount: "",
     cameras: "",
-    image: null
+    shop_pic: null
   });
 
   const handleChange = (e) => {
-    const { name, value } = e.target;
+    const { name, value, file } = e.target;
     setFormData(prev => ({
       ...prev,
-      [name]: value
+      [name]: value,
+      shop_pic: file ? file[0] : null
     }));
   };
 
@@ -58,7 +59,7 @@ export default function AddShop({ isOpen, onClose }) {
     setPreviewImage(null);
     setFormData(prev => ({
       ...prev,
-      image: null
+      shop_pic: null
     }));
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
@@ -84,12 +85,12 @@ export default function AddShop({ isOpen, onClose }) {
       console.log('Form Data',formData)
 
       let dataToSend;
-      if (formData.image) {
+      if (formData.shop_pic) {
         dataToSend = new FormData();
         Object.entries(apiData).forEach(([key, value]) => {
           dataToSend.append(key, value);
         });
-        dataToSend.append('image', formData.image);
+        dataToSend.append('image', formData.shop_pic);
       } else {
         dataToSend = apiData;
       }
@@ -103,7 +104,7 @@ export default function AddShop({ isOpen, onClose }) {
           address: "",
           adminCount: "",
           cameras: "",
-          image: null
+          shop_pic: null
         });
         setPreviewImage(null);
         dispatch(fetchShopsByTenantAPI());

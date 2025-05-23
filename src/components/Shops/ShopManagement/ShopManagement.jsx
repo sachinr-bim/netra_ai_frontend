@@ -36,8 +36,8 @@ export default function ShopManagement() {
 
   // Filter shops based on search term
   const filteredShops = shops.filter(shop => 
-    shop.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    shop.address.toLowerCase().includes(searchTerm.toLowerCase())
+    shop?.name?.toLowerCase().includes(searchTerm?.toLowerCase()) ||
+    shop?.address?.toLowerCase().includes(searchTerm?.toLowerCase())
   );
 
   // Pagination logic
@@ -114,15 +114,21 @@ export default function ShopManagement() {
                 onClick={() => showShopDetails(shop.id)}
               >
                 <div className="aspect-w-16 aspect-h-9 mb-4 overflow-hidden rounded-xl">
-                  <img 
-                    src="https://static.nike.com/a/images/f_auto/c8a2ec76-6665-4203-8852-f4ee668aaa7a/image.jpg"
-                    alt="Shop" 
-                    className="w-full h-40 sm:h-48 object-cover"
-                    onError={(e) => {
-                      e.target.src = "https://cdn-icons-png.freepik.com/256/869/869636.png?semt=ais_hybrid";
-                      e.target.className = "w-full h-40 sm:h-48 object-contain p-4 bg-gray-100";
-                    }}
-                  />
+                  {shop.shop_pic ? (
+                    <img 
+                      src={shop.shop_pic} 
+                      alt="Shop" 
+                      className="w-full h-40 sm:h-48 object-cover"
+                      onError={(e) => {
+                        e.target.src = "https://cdn-icons-png.freepik.com/256/869/869636.png?semt=ais_hybrid";
+                        e.target.className = "w-full h-40 sm:h-48 object-contain p-4 bg-gray-100";
+                      }}
+                    />
+                  ) : (
+                    <div className="w-full h-40 sm:h-48 bg-gray-100 flex items-center justify-center">
+                      <span className="text-4xl">🏪</span>
+                    </div>
+                  )}
                 </div>
                 
                 <div className="flex justify-between items-start">

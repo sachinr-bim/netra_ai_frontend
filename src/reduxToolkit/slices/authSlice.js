@@ -3,13 +3,13 @@ import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import axios from 'axios';
 
 // API endpoint
-const LOGIN_API = 'http://52.90.112.216/api/user/login';
+const API_URL = import.meta.env.VITE_API_URL
 
 export const signupUser = createAsyncThunk(
   'auth/signup',
   async (userData, { rejectWithValue }) => {
     try {
-      const response = await axios.post('http://52.90.112.216/api/user/createTenant', userData);
+      const response = await axios.post(`${API_URL}/api/user/createTenant`, userData);
       
       // Optional: Auto-login after signup if your API returns token
       if (response.data.token) {
@@ -32,7 +32,7 @@ export const loginUser = createAsyncThunk(
   'user/login',
   async (credentials, { rejectWithValue }) => {
     try {
-      const response = await axios.post(LOGIN_API, credentials);
+      const response = await axios.post(`${API_URL}/api/user/login`, credentials);
       
       // Store token in localStorage
       if (response.data.token) {
@@ -61,7 +61,7 @@ export const getCurrentUser = createAsyncThunk(
     try {
       const token = localStorage.getItem('userToken');
       const response = await axios.get(
-        "http://52.90.112.216/api/user/me",
+        `${API_URL}/api/user/me`,
         {
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -83,7 +83,7 @@ export const forgotPassword = createAsyncThunk(
   'auth/forgotPassword',
   async (email, { rejectWithValue }) => {
     try {
-      const response = await axios.post('http://52.90.112.216/api/user/forgot-password', { email });
+      const response = await axios.post(`${API_URL}/api/user/forgot-password`, { email });
       console.log('Forgot Password:',response.data)
       return response.data;
     } catch (error) {
@@ -100,7 +100,7 @@ export const verifyPasswordToken = createAsyncThunk(
   'auth/verifyPasswordToken',
   async ({ email, token }, { rejectWithValue }) => {
     try {
-      const response = await axios.post('http://52.90.112.216/api/user/verify-Password-Token', { email, token });
+      const response = await axios.post(`${API_URL}/api/user/verify-Password-Token`, { email, token });
       console.log('Verify Code:',response.data)
       return response.data;
     } catch (error) {
@@ -124,7 +124,7 @@ export const resetPassword = createAsyncThunk(
         password 
       });
       
-      const response = await axios.post('http://52.90.112.216/api/user/new-password', {
+      const response = await axios.post(`${API_URL}/api/user/new-password`, {
         email,
         token: parseInt(token), // Ensure token is number
         password
@@ -156,8 +156,8 @@ export const deleteTenant = createAsyncThunk(
   async (email, { rejectWithValue }) => {
     try {
       const token = localStorage.getItem('userToken');
-      const response = await axios.post(
-        'http://52.90.112.216/api/user/deleteTenant',
+      const response = await axios.delete(
+        `${API_URL}/api/user/deleteTenant`,
         { email },
         {
           headers: {
@@ -182,8 +182,8 @@ export const updateTenant = createAsyncThunk(
   async (userData, { rejectWithValue }) => {
     try {
       const token = localStorage.getItem('userToken');
-      const response = await axios.post(
-        'http://52.90.112.216/api/user/updateTenant',
+      const response = await axios.put(
+        `${API_URL}/api/user/updateTenant`,
         userData,
         {
           headers: {

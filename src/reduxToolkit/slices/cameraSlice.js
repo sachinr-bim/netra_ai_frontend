@@ -1,6 +1,8 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "axios";
 
+const API_URL = import.meta.env.VITE_API_URL 
+
 // Async Thunk for creating camera
 export const createCameraAPI = createAsyncThunk(
   'cameras/createCamera',
@@ -8,7 +10,7 @@ export const createCameraAPI = createAsyncThunk(
     try {
       const token = localStorage.getItem('userToken');
       const response = await axios.post(
-        "http://52.90.112.216/api/camera/create",
+        `${API_URL}/api/camera/create`,
         cameraData,
         {
           headers: {
@@ -33,7 +35,7 @@ export const fetchCamerasByShopIdAPI = createAsyncThunk(
     try {
       const token = localStorage.getItem('userToken');
       const response = await axios.get(
-        `http://52.90.112.216/api/camera/shop/${shopId}`,
+        `${API_URL}/api/camera/shop/${shopId}`,
         {
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -55,7 +57,7 @@ export const deleteCameraAPI = createAsyncThunk(
     try {
       const token = localStorage.getItem('userToken');
       const response = await axios.delete(
-        `http://52.90.112.216/api/camera/delete/${cameraId}`,
+        `${API_URL}/api/camera/delete/${cameraId}`,
         {
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -76,7 +78,7 @@ export const updateCameraAPI = createAsyncThunk(
     try {
       const token = localStorage.getItem('userToken');
       const response = await axios.put(
-        `http://52.90.112.216/api/camera/update/${cameraId}`,
+        `${API_URL}/api/camera/update/${cameraId}`,
         cameraData,
         {
           headers: {

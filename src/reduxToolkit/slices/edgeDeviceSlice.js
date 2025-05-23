@@ -2,6 +2,8 @@ import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "axios";
 import Swal from "sweetalert2";
 
+const API_URL = import.meta.env.VITE_API_URL
+
 // Async Thunk for creating edge device
 export const createEdgeDeviceAPI = createAsyncThunk(
   'edgeDevices/createEdgeDevice',
@@ -10,7 +12,7 @@ export const createEdgeDeviceAPI = createAsyncThunk(
       const token = localStorage.getItem('userToken');
       
       const response = await axios.post(
-        "http://52.90.112.216/api/edge_device/create",
+        `${API_URL}/api/edge_device/create`,
         deviceData,
         {
           headers: {
@@ -41,7 +43,7 @@ export const fetchEdgeDevicesByShopAPI = createAsyncThunk(
       const token = localStorage.getItem('userToken');
       
       const response = await axios.get(
-        `http://52.90.112.216/api/edge_device/shop/${shopId}`,
+        `${API_URL}/api/edge_device/shop/${shopId}`,
         {
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -63,7 +65,7 @@ export const deleteEdgeDeviceAPI = createAsyncThunk(
       const token = localStorage.getItem('userToken');
       
       const response = await axios.delete(
-        `http://52.90.112.216/api/edge_device/delete/${deviceId}`,
+        `${API_URL}/api/edge_device/delete/${deviceId}`,
         {
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -85,7 +87,7 @@ export const updateEdgeDeviceAPI = createAsyncThunk(
       const token = localStorage.getItem('userToken');
       
       const response = await axios.put(
-        `http://52.90.112.216/api/edge_device/update/${deviceId}`,
+        `${API_URL}/api/edge_device/update/${deviceId}`,
         deviceData,
         {
           headers: {

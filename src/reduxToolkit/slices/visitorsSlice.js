@@ -2,13 +2,13 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "axios";
 
-const API_URL = "http://52.90.112.216/api/shop_visitor/shop";
+const API_URL = import.meta.env.VITE_API_URL;
 
 export const fetchVisitorsByGender = createAsyncThunk(
   'visitor/fetchVisitorsByGender',
   async ({ shopId, startDate, endDate }, { getState }) => {
     const token = getState().auth.userToken;
-    const response = await axios.get(`${API_URL}/${shopId}/gender/count`, {
+    const response = await axios.get(`${API_URL}/api/shop_visitor/shop/${shopId}/gender/count`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
@@ -41,7 +41,7 @@ export const fetchVisitorsByDateRange = createAsyncThunk(
   'visitor/fetchVisitorsByDateRange',
   async ({ shopId, startDate, endDate }, { getState }) => {
     const token = getState().auth.userToken;
-    const response = await axios.get(`${API_URL}/${shopId}/count/date`, {
+    const response = await axios.get(`${API_URL}/api/shop_visitor/shop/${shopId}/count/date`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },

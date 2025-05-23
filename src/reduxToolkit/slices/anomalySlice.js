@@ -1,6 +1,8 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "axios";
 
+const API_URL = import.meta.env.VITE_API_URL
+
 const initialState = {
   anomalies: [],
   filteredAnomalies: [],
@@ -20,7 +22,7 @@ export const fetchAnomaliesForTenant = createAsyncThunk(
   async () => {
     const token = localStorage.getItem('userToken');
     const response = await axios.get(
-      'http://52.90.112.216/api/anomaly/getAnomaliesForTenant',
+      `${API_URL}/api/anomaly/getAnomaliesForTenant`,
       {
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -37,7 +39,7 @@ export const fetchAnomaliesByShopId = createAsyncThunk(
   async (shopId) => {
     const token = localStorage.getItem('userToken');
     const response = await axios.get(
-      `http://52.90.112.216/api/anomaly/shop/${shopId}`,
+      `${API_URL}/api/anomaly/shop/${shopId}`,
       {
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -55,7 +57,7 @@ export const fetchAnomaliesByDateRange = createAsyncThunk(
     try {
       const token = localStorage.getItem('userToken');
       const response = await axios.get(
-        `http://52.90.112.216/api/anomaly/shop/${shopId}/date`,
+        `${API_URL}/api/anomaly/shop/${shopId}/date`,
         {
           params: {
             startDate,
@@ -85,7 +87,7 @@ export const filterAnomalies = createAsyncThunk(
     try {
       const token = localStorage.getItem('userToken');
       const response = await axios.post(
-        `http://52.90.112.216/api/anomaly/filter`,
+        `${API_URL}/api/anomaly/filter`,
         filterParams,
         {
           headers: {
